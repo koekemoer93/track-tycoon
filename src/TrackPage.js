@@ -121,10 +121,12 @@ const TrackPage = () => {
 
     const listRef = collection(db, 'tracks', trackId, 'shoppingList');
     await setDoc(doc(listRef), {
-      name: shoppingItem,
-      quantity: shoppingQty,
-      addedAt: serverTimestamp(),
-    });
+  name: shoppingItem,
+  quantity: shoppingQty,
+  status: 'requested',
+  addedAt: serverTimestamp(),
+});
+
 
     setShoppingItem('');
     setShoppingQty('');
