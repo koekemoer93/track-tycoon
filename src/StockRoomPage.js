@@ -1,10 +1,8 @@
-// src/StockRoomPage.js
 import { onSnapshot } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import React, { useState, useEffect } from 'react';
 import {
   collection,
-  getDocs,
   doc,
   setDoc,
   updateDoc,
@@ -12,6 +10,16 @@ import {
   getDoc
 } from 'firebase/firestore';
 import { db } from './firebase';
+
+const getCategoryIcon = (category) => {
+  switch (category) {
+    case 'drinks': return '🥤';
+    case 'spares': return '🛠️';
+    case 'cleaning': return '🧽';
+    default: return '📦';
+  }
+};
+
 
 const tracks = [
   'indykart-eastgate',
@@ -136,92 +144,119 @@ const StockRoomPage = () => {
 
   return (
     <div style={{ padding: 20, color: '#fff' }}>
-      <h2>📦 Stock Control Room</h2>
-
-      <div style={{ marginBottom: 20 }}>
-        <input
-          type="text"
-          placeholder="Item name"
-          value={newItemName}
-          onChange={e => setNewItemName(e.target.value)}
-          style={{ padding: 8, marginRight: 10 }}
-        />
-        <input
-          type="number"
-          placeholder="Qty"
-          value={newItemQty}
-          onChange={e => setNewItemQty(e.target.value)}
-          style={{ padding: 8, marginRight: 10 }}
-        />
-        <select
-          value={newItemCategory}
-          onChange={(e) => setNewItemCategory(e.target.value)}
-          style={{ padding: 8, marginRight: 10 }}
-        >
-          <option value="drinks">Drinks</option>
-          <option value="spares">Spares</option>
-          <option value="cleaning">Cleaning</option>
-          <option value="uncategorized">Uncategorized</option>
-        </select>
-        <button onClick={handleAddItem}>Add to Stock Room</button>
+      <h2 style={{ fontSize: 28, fontWeight: 600, marginBottom: 20 }}>📦 Stock Control</h2>
+          {/* 🧩 Horizontal Catalog Scroll */}
+<div
+  style={{
+    display: 'flex',
+    overflowX: 'auto',
+    paddingBottom: 10,
+    marginBottom: 30,
+    borderBottom: '1px solid #333'
+  }}
+>
+  {stockItems.slice(0, 10).map((item) => (
+    <div
+      key={item.id}
+      style={{
+        minWidth: 140,
+        background: '#2c2c2e',
+        borderRadius: 12,
+        padding: 12,
+        marginRight: 12,
+        color: '#fff',
+        boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
+        flexShrink: 0
+      }}
+    >
+      <div style={{ fontSize: 24, marginBottom: 6 }}>
+        {getCategoryIcon(item.category)}
+      </div>
+      <div style={{ fontSize: 16, fontWeight: 'bold' }}>{item.name}</div>
+      <div style={{ fontSize: 14, color: '#aaa' }}>
+        {item.quantity} units
+      </div>
+    </div>
+  ))}
+</div>
+      {/* Add New Stock Section */}
+      <div style={{
+        background: '#1c1c1e',
+        padding: 20,
+        borderRadius: 14,
+        marginBottom: 20,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.4)'
+      }}>
+        <h3 style={{ marginBottom: 10 }}>➕ Add New Stock</h3>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+          <input placeholder="Item name" value={newItemName} onChange={e => setNewItemName(e.target.value)} style={{ padding: 10, flex: 1 }} />
+          <input placeholder="Qty" value={newItemQty} onChange={e => setNewItemQty(e.target.value)} type="number" style={{ padding: 10, width: 100 }} />
+          <select value={newItemCategory} onChange={e => setNewItemCategory(e.target.value)} style={{ padding: 10 }}>
+            <option value="drinks">Drinks</option>
+            <option value="spares">Spares</option>
+            <option value="cleaning">Cleaning</option>
+            <option value="uncategorized">Uncategorized</option>
+          </select>
+          <button onClick={handleAddItem} style={{ padding: '10px 20px', background: '#34c759', color: '#fff', border: 'none', borderRadius: 8 }}>Add</button>
+        </div>
       </div>
 
+      {/* Filter Section */}
       <div style={{ marginBottom: 20 }}>
-        <label style={{ marginRight: 10 }}>Filter by Category:</label>
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          style={{ padding: 8 }}
-        >
-          {uniqueCategories.map((cat) => (
+        <label>Filter by category: </label>
+        <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)} style={{ padding: 8 }}>
+          {uniqueCategories.map(cat => (
             <option key={cat} value={cat}>{cat}</option>
           ))}
         </select>
       </div>
 
-      <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
-        {filteredItems.map((item) => (
-          <li key={item.id} style={{ marginBottom: 20 }}>
-            <strong>{item.name}</strong> — {item.quantity} in stock ({item.category})
-            <div style={{ marginTop: 8 }}>
-              <div><em>Track Inventory:</em></div>
-              {tracks.map(trackId => (
-                <div key={trackId} style={{ marginLeft: 10 }}>
-                  {trackId}: {item.trackStock?.[trackId] || 0}
-                  <button
-                    style={{ marginLeft: 8 }}
-                    onClick={() => handleTransfer(item.id, trackId)}
-                  >
-                    ➡ Transfer
-                  </button>
-                </div>
-              ))}
+      {/* Stock Items */}
+      {filteredItems.map(item => (
+        <div key={item.id} style={{
+          background: '#1c1c1e',
+          padding: 15,
+          borderRadius: 12,
+          marginBottom: 12,
+          boxShadow: '0 1px 2px rgba(0,0,0,0.3)'
+        }}>
+          <strong>{item.name}</strong> — {item.quantity} units ({item.category})
+          <div style={{ fontSize: 12, marginTop: 6, color: '#ccc' }}>Track stock:</div>
+          {tracks.map(trackId => (
+            <div key={trackId} style={{ marginLeft: 10 }}>
+              {trackId}: {item.trackStock?.[trackId] || 0}
+              <button
+                onClick={() => handleTransfer(item.id, trackId)}
+                style={{ marginLeft: 8, fontSize: 12, padding: '2px 8px', borderRadius: 6, border: 'none', background: '#0a84ff', color: '#fff' }}
+              >
+                Transfer
+              </button>
             </div>
-          </li>
-        ))}
-      </ul>
+          ))}
+        </div>
+      ))}
 
-      <hr style={{ margin: '40px 0' }} />
-      <h3>🛒 Pending Shopping Requests</h3>
-
+      {/* Shopping Requests */}
+      <hr style={{ margin: '40px 0', borderColor: '#444' }} />
+      <h3 style={{ marginBottom: 12 }}>🛒 Pending Requests</h3>
       {shoppingRequests.length === 0 && <p>No pending requests.</p>}
-
-      <ul style={{ listStyle: 'none', padding: 0 }}>
-        {shoppingRequests.map((item) => (
-          <li key={item.id} style={{ marginBottom: 16 }}>
-            <strong>{item.name}</strong> – Qty: {item.quantity}
-            <div style={{ fontSize: 14, marginTop: 4, color: '#ccc' }}>
-              Track: {item.trackId}
-            </div>
-            <button
-              style={{ marginTop: 6 }}
-              onClick={() => fulfillRequest(item)}
-            >
-              ✅ Fulfill
-            </button>
-          </li>
-        ))}
-      </ul>
+      {shoppingRequests.map(item => (
+        <div key={item.id} style={{
+          background: '#2c2c2e',
+          padding: 15,
+          borderRadius: 10,
+          marginBottom: 10
+        }}>
+          <strong>{item.name}</strong> — Qty: {item.quantity}
+          <div style={{ fontSize: 13, color: '#aaa' }}>Track: {item.trackId}</div>
+          <button
+            onClick={() => fulfillRequest(item)}
+            style={{ marginTop: 8, padding: '6px 16px', background: '#30d158', color: '#000', border: 'none', borderRadius: 8 }}
+          >
+            ✅ Fulfill
+          </button>
+        </div>
+      ))}
     </div>
   );
 };

@@ -94,6 +94,30 @@ const TrackDashboard = () => {
             </div>
           </div>
         ))}
+
+        {/* Store Room Card */}
+<div
+  onClick={() => navigate('/stockroom')}
+  style={{
+    background: '#1c1c1e',
+    padding: '15px 20px',
+    borderRadius: 14,
+    marginBottom: 12,
+    color: '#fff',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    cursor: 'pointer',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.4)',
+  }}
+>
+  <div>
+    <p style={{ fontSize: 16, fontWeight: 600 }}>Store Room</p>
+    <p style={{ fontSize: 12, color: '#aaa' }}>Central Stock Manager</p>
+  </div>
+  <div style={{ fontSize: 12, color: '#666' }}>—</div>
+</div>
+
       </div>
     </div>
   );
