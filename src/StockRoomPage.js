@@ -11,6 +11,17 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 
+const getCategoryEmoji = (category) => {
+  switch (category) {
+    case 'drinks': return '🥤';
+    case 'spares': return '🔧';
+    case 'cleaning': return '🧽';
+    case 'uncategorized': return '📦';
+    default: return '📦';
+  }
+};
+
+
 const getCategoryIcon = (category) => {
   switch (category) {
     case 'drinks': return '🥤';
@@ -45,7 +56,9 @@ const StockRoomPage = () => {
     const stockRef = collection(db, 'stockRoom');
     const unsubscribeStock = onSnapshot(stockRef, (snapshot) => {
       const updated = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setStockItems(updated);
+      const sorted = [...updated].sort((a, b) => a.quantity - b.quantity);
+      setStockItems(sorted);
+
     });
     unsubscribes.push(unsubscribeStock);
 
@@ -144,6 +157,38 @@ const StockRoomPage = () => {
 
   return (
     <div style={{ padding: 20, color: '#fff' }}>
+      <div
+  style={{
+    display: 'flex',
+    overflowX: 'auto',
+    gap: 12,
+    marginBottom: 20,
+    paddingBottom: 10,
+  }}
+>
+  {stockItems.map((item) => (
+    <div
+      key={item.id}
+      style={{
+        background: '#2c2c2e',
+        borderRadius: 12,
+        padding: '10px 16px',
+        minWidth: 160,
+        color: '#fff',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.4)',
+        flexShrink: 0,
+      }}
+    >
+      <div style={{ fontSize: 18 }}>
+        {getCategoryEmoji(item.category)} {item.name}
+      </div>
+      <div style={{ fontSize: 14, color: '#aaa' }}>
+        {item.quantity} units
+      </div>
+    </div>
+  ))}
+</div>
+
       <h2 style={{ fontSize: 28, fontWeight: 600, marginBottom: 20 }}>📦 Stock Control</h2>
           {/* 🧩 Horizontal Catalog Scroll */}
 <div

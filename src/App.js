@@ -9,13 +9,16 @@ import EmployeeDashboard from './EmployeeDashboard';
 import AuthPage from './AuthPage';
 import UserAdminPage from './UserAdminPage';
 import TopNav from './components/TopNav';
+import RoleRedirect from './RoleRedirect';
+
 
 function App() {
   return (
     <Router>
       <TopNav />
       <Routes>
-        <Route path="/" element={<AuthPage />} /> {/* Default route */}
+        <Route path="/" element={<RoleRedirect />} />
+        <Route path="/auth" element={<AuthPage />} />
         <Route path="/dashboard" element={<TrackDashboard />} />
         <Route path="/employee-dashboard" element={<EmployeeDashboard />} />
         <Route path="/import-stock" element={<StockImportPage />} />
