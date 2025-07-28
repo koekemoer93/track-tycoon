@@ -1,4 +1,5 @@
-// src/TrackPage.js
+import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
 import {
   collection,
   query,
@@ -8,11 +9,13 @@ import {
   getDoc,
   setDoc,
   serverTimestamp,
-  deleteDoc // required for deleting items
+  deleteDoc,
+  onSnapshot,
 } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { db } from './firebase';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const TrackPage = () => {
   const { trackId } = useParams();
@@ -34,7 +37,6 @@ const TrackPage = () => {
         setTrack(snap.data());
       }
     };
-
     fetchTrack();
   }, [trackId]);
 
@@ -60,32 +62,47 @@ const TrackPage = () => {
         if (savedSnap.exists()) {
           const savedData = savedSnap.data();
           setCheckedTasks(savedData.checklist || tasks.map(() => false));
+          setTrack(prev => ({ ...prev, images: savedData.images || {} }));
         } else {
           setCheckedTasks(tasks.map(() => false));
         }
       }
     };
-
     fetchChecklist();
-  }, [track]);
+  }, [track, trackId]);
 
   useEffect(() => {
-    const fetchShoppingList = async () => {
-      if (!trackId) return;
+    if (!trackId) return;
+    const unsubscribe = onSnapshot(
+      collection(db, 'tracks', trackId, 'shoppingList'),
+      (snapshot) => {
+        const items = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setShoppingList(items);
+      }
+    );
+    return () => unsubscribe();
+  }, [trackId]);
 
-      const q = collection(db, 'tracks', trackId, 'shoppingList');
-      const snapshot = await getDocs(q);
+  useEffect(() => {
+    if (!checklist.length || !trackId) return;
+    const totalTasks = checklist.length;
+    const completedTasks = checkedTasks.filter(Boolean).length;
 
-      const items = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-
-      setShoppingList(items);
+    const updateTrackProgress = async () => {
+      const ref = doc(db, 'tracks', trackId);
+      await setDoc(ref, {
+        ...track,
+        completedTasks,
+        totalTasks,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
     };
 
-    fetchShoppingList();
-  }, [trackId]);
+    updateTrackProgress();
+  }, [checkedTasks, checklist.length, track, trackId]);
 
   const handleSave = async () => {
     const ref = doc(db, 'users', userId, 'checklists', trackId);
@@ -93,6 +110,7 @@ const TrackPage = () => {
       track: track.name,
       role: userRole,
       checklist: checkedTasks,
+      images: track.images || {},
       updatedAt: serverTimestamp()
     });
     alert('Checklist progress saved!');
@@ -127,11 +145,43 @@ const TrackPage = () => {
       quantity: newQty,
       updatedAt: serverTimestamp()
     }, { merge: true });
+  };
 
-    const q = collection(db, 'tracks', trackId, 'shoppingList');
-    const snapshot = await getDocs(q);
-    const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    setShoppingList(items);
+  const handleUploadImage = async (itemId, file) => {
+    const storage = getStorage();
+    const storageRef = ref(storage, `shoppingList/${trackId}/${itemId}.jpg`);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+
+    const docRef = doc(db, 'tracks', trackId, 'shoppingList', itemId);
+    await setDoc(docRef, { imageUrl: url }, { merge: true });
+  };
+
+  const handleTaskImageUpload = async (taskIndex, file) => {
+    const storage = getStorage();
+    const storageRef = ref(storage, `checklists/${userId}/${trackId}/task_${taskIndex}.jpg`);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+
+    const userChecklistRef = doc(db, 'users', userId, 'checklists', trackId);
+    const snap = await getDoc(userChecklistRef);
+    const existing = snap.exists() ? snap.data() : {};
+
+    const updatedImages = {
+      ...(existing.images || {}),
+      [taskIndex]: url
+    };
+
+    await setDoc(userChecklistRef, {
+      ...existing,
+      images: updatedImages,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+    setTrack(prev => ({
+      ...prev,
+      images: updatedImages
+    }));
   };
 
   if (!track) return <p style={{ color: '#fff', padding: 20 }}>Loading track...</p>;
@@ -139,27 +189,72 @@ const TrackPage = () => {
   return (
     <div style={{ padding: 20, color: '#fff' }}>
       <h2>{track.name}</h2>
-      <p><strong>Total Tasks:</strong> {track.totalTasks}</p>
-      <p><strong>Completed:</strong> {track.completedTasks}</p>
-      <p><strong>Progress:</strong> {Math.round((track.completedTasks / track.totalTasks) * 100)}%</p>
 
+      {/* ✅ Progress per role */}
+      {['Marshal', 'Manager', 'Mechanic', 'Cleaner'].map((role) => {
+        const roleTasks = checklist.filter(task => task.role === role);
+        const completed = roleTasks.filter((_, i) => checkedTasks[i]).length;
+        const total = roleTasks.length;
+        const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+        return (
+          <div key={role} style={{ display: 'flex', alignItems: 'center', margin: '16px 0' }}>
+            <div style={{ width: 50, height: 50, marginRight: 16 }}>
+              <CircularProgressbar
+                value={percentage}
+                text={`${percentage}%`}
+                styles={buildStyles({
+                  textSize: '28px',
+                  pathColor: '#00FF7F',
+                  textColor: '#FFFFFF',
+                  trailColor: '#333',
+                  backgroundColor: '#000',
+                })}
+              />
+            </div>
+            <div style={{ color: '#FFF', fontSize: 16 }}>{role}</div>
+          </div>
+        );
+      })}
+
+      {/* ✅ Checklist */}
       <h3 style={{ marginTop: 30 }}>Checklist for {userRole}</h3>
       <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
         {checklist.map((task, i) => (
           <li key={i}>
-            <label>
+            <div style={{ marginBottom: 16 }}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={checkedTasks[i] || false}
+                  onChange={() => {
+                    const updated = [...checkedTasks];
+                    updated[i] = !updated[i];
+                    setCheckedTasks(updated);
+                  }}
+                />
+                {' '}
+                {task.name || task}
+              </label>
+
+              {/* Image Preview */}
+              {track?.images?.[i] && (
+                <div style={{ marginTop: 6 }}>
+                  <img src={track.images[i]} alt="task" style={{ width: 100, borderRadius: 6 }} />
+                </div>
+              )}
+
+              {/* Upload Input */}
               <input
-                type="checkbox"
-                checked={checkedTasks[i] || false}
-                onChange={() => {
-                  const updated = [...checkedTasks];
-                  updated[i] = !updated[i];
-                  setCheckedTasks(updated);
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) handleTaskImageUpload(i, file);
                 }}
+                style={{ marginTop: 6 }}
               />
-              {' '}
-              {task}
-            </label>
+            </div>
           </li>
         ))}
       </ul>
@@ -179,7 +274,7 @@ const TrackPage = () => {
         Save Progress
       </button>
 
-      {/* --- SHOPPING LIST --- */}
+      {/* ✅ Shopping List */}
       <h3 style={{ marginTop: 40 }}>🛒 Weekly Shopping List</h3>
       <div style={{ marginBottom: 20 }}>
         <input
@@ -226,6 +321,24 @@ const TrackPage = () => {
         {shoppingList.map((item) => (
           <li key={item.id} style={{ marginBottom: 12 }}>
             <strong>{item.name}</strong> – Qty: {item.quantity}
+
+            {/* Shopping Item Image */}
+            {item.imageUrl && (
+              <div style={{ marginTop: 8 }}>
+                <img src={item.imageUrl} alt="uploaded" style={{ width: 100, borderRadius: 6 }} />
+              </div>
+            )}
+
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) handleUploadImage(item.id, file);
+              }}
+              style={{ marginTop: 8 }}
+            />
+
             <button
               onClick={() => {
                 const newName = prompt('Edit item name', item.name);
