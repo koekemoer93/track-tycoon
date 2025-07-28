@@ -1,3 +1,4 @@
+// src/TrackPage.js
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import {
@@ -16,6 +17,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { db } from './firebase';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import mockTemplatesByDay from './mockTemplatesByDay';
+import { format } from 'date-fns';
 
 const TrackPage = () => {
   const { trackId } = useParams();
@@ -26,8 +29,8 @@ const TrackPage = () => {
   const [shoppingQty, setShoppingQty] = useState('');
   const [shoppingList, setShoppingList] = useState([]);
 
-  const userRole = 'Marshal'; // TODO: replace with real role later
-  const userId = 'demo-user'; // TODO: replace with real auth later
+  const userRole = 'Marshal'; // mock role
+  const userId = 'demo-user'; // mock user
 
   useEffect(() => {
     const fetchTrack = async () => {
@@ -118,16 +121,13 @@ const TrackPage = () => {
 
   const handleAddShoppingItem = async () => {
     if (!shoppingItem || !shoppingQty) return alert("Please fill in both fields.");
-
     const listRef = collection(db, 'tracks', trackId, 'shoppingList');
     await setDoc(doc(listRef), {
-  name: shoppingItem,
-  quantity: shoppingQty,
-  status: 'requested',
-  addedAt: serverTimestamp(),
-});
-
-
+      name: shoppingItem,
+      quantity: shoppingQty,
+      status: 'requested',
+      addedAt: serverTimestamp(),
+    });
     setShoppingItem('');
     setShoppingQty('');
     alert("Item added to shopping list!");
@@ -192,145 +192,72 @@ const TrackPage = () => {
     <div style={{ padding: 20, color: '#fff' }}>
       <h2>{track.name}</h2>
 
-      {/* ✅ Progress per role */}
-      {['Marshal', 'Manager', 'Mechanic', 'Cleaner'].map((role) => {
-        const roleTasks = checklist.filter(task => task.role === role);
-        const completed = roleTasks.filter((_, i) => checkedTasks[i]).length;
-        const total = roleTasks.length;
-        const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-        return (
-          <div key={role} style={{ display: 'flex', alignItems: 'center', margin: '16px 0' }}>
-            <div style={{ width: 50, height: 50, marginRight: 16 }}>
-              <CircularProgressbar
-                value={percentage}
-                text={`${percentage}%`}
-                styles={buildStyles({
-                  textSize: '28px',
-                  pathColor: '#00FF7F',
-                  textColor: '#FFFFFF',
-                  trailColor: '#333',
-                  backgroundColor: '#000',
-                })}
-              />
-            </div>
-            <div style={{ color: '#FFF', fontSize: 16 }}>{role}</div>
-          </div>
-        );
-      })}
-
-      {/* ✅ Checklist */}
       <h3 style={{ marginTop: 30 }}>Checklist for {userRole}</h3>
       <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
         {checklist.map((task, i) => (
           <li key={i}>
-            <div style={{ marginBottom: 16 }}>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={checkedTasks[i] || false}
-                  onChange={() => {
-                    const updated = [...checkedTasks];
-                    updated[i] = !updated[i];
-                    setCheckedTasks(updated);
-                  }}
-                />
-                {' '}
-                {task.name || task}
-              </label>
-
-              {/* Image Preview */}
-              {track?.images?.[i] && (
-                <div style={{ marginTop: 6 }}>
-                  <img src={track.images[i]} alt="task" style={{ width: 100, borderRadius: 6 }} />
-                </div>
-              )}
-
-              {/* Upload Input */}
+            <label>
               <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files[0];
-                  if (file) handleTaskImageUpload(i, file);
+                type="checkbox"
+                checked={checkedTasks[i] || false}
+                onChange={() => {
+                  const updated = [...checkedTasks];
+                  updated[i] = !updated[i];
+                  setCheckedTasks(updated);
                 }}
-                style={{ marginTop: 6 }}
-              />
-            </div>
+              />{' '}
+              {task.name || task}
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) handleTaskImageUpload(i, file);
+              }}
+              style={{ marginLeft: 10 }}
+            />
+            {track.images?.[i] && (
+              <div style={{ marginTop: 6 }}>
+                <img src={track.images[i]} alt="task" style={{ width: 100, borderRadius: 6 }} />
+              </div>
+            )}
           </li>
         ))}
       </ul>
 
-      <button
-        style={{
-          marginTop: 20,
-          padding: '10px 20px',
-          backgroundColor: '#00c853',
-          color: '#fff',
-          border: 'none',
-          borderRadius: 6,
-          cursor: 'pointer'
-        }}
-        onClick={handleSave}
-      >
+      <button onClick={handleSave} style={{ marginTop: 20, padding: 10, backgroundColor: '#00c853', color: '#fff', border: 'none', borderRadius: 4 }}>
         Save Progress
       </button>
 
-      {/* ✅ Shopping List */}
-      <h3 style={{ marginTop: 40 }}>🛒 Weekly Shopping List</h3>
-      <div style={{ marginBottom: 20 }}>
-        <input
-          type="text"
-          placeholder="Item name"
-          value={shoppingItem}
-          onChange={(e) => setShoppingItem(e.target.value)}
-          style={{
-            padding: '8px',
-            marginRight: '10px',
-            borderRadius: '4px',
-            border: '1px solid #ccc'
-          }}
-        />
-        <input
-          type="text"
-          placeholder="Qty"
-          value={shoppingQty}
-          onChange={(e) => setShoppingQty(e.target.value)}
-          style={{
-            padding: '8px',
-            marginRight: '10px',
-            width: '60px',
-            borderRadius: '4px',
-            border: '1px solid #ccc'
-          }}
-        />
-        <button
-          onClick={handleAddShoppingItem}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: '#2962ff',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          Add Item
-        </button>
-      </div>
+      <h3 style={{ marginTop: 40 }}>🛒 Shopping List</h3>
+      <input
+        type="text"
+        placeholder="Item name"
+        value={shoppingItem}
+        onChange={(e) => setShoppingItem(e.target.value)}
+        style={{ marginRight: 8 }}
+      />
+      <input
+        type="text"
+        placeholder="Qty"
+        value={shoppingQty}
+        onChange={(e) => setShoppingQty(e.target.value)}
+        style={{ marginRight: 8, width: 60 }}
+      />
+      <button onClick={handleAddShoppingItem} style={{ backgroundColor: '#2962ff', color: '#fff', padding: 8, borderRadius: 4 }}>
+        Add Item
+      </button>
 
-      <ul style={{ listStyle: 'none', padding: 0 }}>
+      <ul style={{ marginTop: 20 }}>
         {shoppingList.map((item) => (
           <li key={item.id} style={{ marginBottom: 12 }}>
             <strong>{item.name}</strong> – Qty: {item.quantity}
-
-            {/* Shopping Item Image */}
             {item.imageUrl && (
-              <div style={{ marginTop: 8 }}>
-                <img src={item.imageUrl} alt="uploaded" style={{ width: 100, borderRadius: 6 }} />
+              <div>
+                <img src={item.imageUrl} alt="item" style={{ width: 100, borderRadius: 4, marginTop: 6 }} />
               </div>
             )}
-
             <input
               type="file"
               accept="image/*"
@@ -338,41 +265,16 @@ const TrackPage = () => {
                 const file = e.target.files[0];
                 if (file) handleUploadImage(item.id, file);
               }}
-              style={{ marginTop: 8 }}
+              style={{ marginTop: 6 }}
             />
-
-            <button
-              onClick={() => {
-                const newName = prompt('Edit item name', item.name);
-                const newQty = prompt('Edit quantity', item.quantity);
-                if (newName && newQty) handleEditItem(item.id, newName, newQty);
-              }}
-              style={{
-                marginLeft: 10,
-                padding: '4px 8px',
-                fontSize: 12,
-                backgroundColor: '#ffa000',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 4,
-                cursor: 'pointer'
-              }}
-            >
+            <button onClick={() => {
+              const newName = prompt('New name:', item.name);
+              const newQty = prompt('New quantity:', item.quantity);
+              if (newName && newQty) handleEditItem(item.id, newName, newQty);
+            }} style={{ marginLeft: 10, fontSize: 12 }}>
               Edit
             </button>
-            <button
-              onClick={() => handleDeleteItem(item.id)}
-              style={{
-                marginLeft: 6,
-                padding: '4px 8px',
-                fontSize: 12,
-                backgroundColor: '#d32f2f',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 4,
-                cursor: 'pointer'
-              }}
-            >
+            <button onClick={() => handleDeleteItem(item.id)} style={{ marginLeft: 6, fontSize: 12, color: 'red' }}>
               Delete
             </button>
           </li>
