@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { getAuth } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
-
+import AnalyticsCards from './components/AnalyticsCards';
 const mockTasks = {
   mechanic: [
     { id: 'oil-check', title: 'Check engine oil' },
