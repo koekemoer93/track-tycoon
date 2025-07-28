@@ -1,4 +1,5 @@
 // src/StockRoomPage.js
+import { onSnapshot } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import React, { useState, useEffect } from 'react';
 import {
@@ -25,32 +26,35 @@ const StockRoomPage = () => {
   const [shoppingRequests, setShoppingRequests] = useState([]);
   const [newItemName, setNewItemName] = useState('');
   const [newItemQty, setNewItemQty] = useState('');
+  const [newItemCategory, setNewItemCategory] = useState('uncategorized');
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [userRole, setUserRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchStock = async () => {
-      const snap = await getDocs(collection(db, 'stockRoom'));
-      const items = snap.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setStockItems(items);
-    };
+    const unsubscribes = [];
 
-    const fetchRequests = async () => {
-      let allRequests = [];
+    const stockRef = collection(db, 'stockRoom');
+    const unsubscribeStock = onSnapshot(stockRef, (snapshot) => {
+      const updated = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setStockItems(updated);
+    });
+    unsubscribes.push(unsubscribeStock);
 
-      for (const trackId of tracks) {
-        const snapshot = await getDocs(collection(db, 'tracks', trackId, 'shoppingList'));
-        const pending = snapshot.docs
+    const requestListeners = tracks.map((trackId) => {
+      const requestRef = collection(db, 'tracks', trackId, 'shoppingList');
+      return onSnapshot(requestRef, (snapshot) => {
+        let pending = snapshot.docs
           .map(doc => ({ ...doc.data(), id: doc.id, trackId }))
           .filter(item => item.status === 'requested');
-        allRequests.push(...pending);
-      }
+        setShoppingRequests(prev => {
+          const allOther = prev.filter(i => i.trackId !== trackId);
+          return [...allOther, ...pending];
+        });
+      });
+    });
 
-      setShoppingRequests(allRequests);
-    };
+    unsubscribes.push(...requestListeners);
 
     const fetchUserRole = async () => {
       const auth = getAuth();
@@ -64,9 +68,11 @@ const StockRoomPage = () => {
       setLoading(false);
     };
 
-    fetchStock();
-    fetchRequests();
     fetchUserRole();
+
+    return () => {
+      unsubscribes.forEach(unsub => unsub());
+    };
   }, []);
 
   const handleAddItem = async () => {
@@ -75,12 +81,13 @@ const StockRoomPage = () => {
     await setDoc(ref, {
       name: newItemName,
       quantity: parseInt(newItemQty),
+      category: newItemCategory,
       unit: 'units',
       trackStock: {}
     });
     setNewItemName('');
     setNewItemQty('');
-    window.location.reload(); // quick reload for now
+    setNewItemCategory('uncategorized');
   };
 
   const handleTransfer = async (itemId, trackId) => {
@@ -92,12 +99,10 @@ const StockRoomPage = () => {
       quantity: increment(-parseInt(amount)),
       [`trackStock.${trackId}`]: increment(parseInt(amount))
     });
-
-    window.location.reload();
   };
 
   const fulfillRequest = async (item) => {
-    const itemId = item.name.toLowerCase().replace(/\s/g, '-'); // temporary itemId based on name
+    const itemId = item.name.toLowerCase().replace(/\s/g, '-');
     const stockRef = doc(db, 'stockRoom', itemId);
     const shoppingRef = doc(db, 'tracks', item.trackId, 'shoppingList', item.id);
 
@@ -112,14 +117,22 @@ const StockRoomPage = () => {
     });
 
     alert(`Fulfilled ${item.name} for ${item.trackId}`);
-    window.location.reload();
   };
 
-  // 🔒 Protect non-owner/admin
   if (loading) return <p style={{ color: '#fff', padding: 20 }}>Loading...</p>;
   if (userRole !== 'owner' && userRole !== 'admin') {
     return <p style={{ color: '#fff', padding: 20 }}>🚫 Access denied</p>;
   }
+
+  const filteredItems =
+    selectedCategory === 'All'
+      ? stockItems
+      : stockItems.filter((item) => item.category === selectedCategory);
+
+  const uniqueCategories = [
+    'All',
+    ...new Set(stockItems.map(item => item.category || 'uncategorized')),
+  ];
 
   return (
     <div style={{ padding: 20, color: '#fff' }}>
@@ -140,13 +153,36 @@ const StockRoomPage = () => {
           onChange={e => setNewItemQty(e.target.value)}
           style={{ padding: 8, marginRight: 10 }}
         />
+        <select
+          value={newItemCategory}
+          onChange={(e) => setNewItemCategory(e.target.value)}
+          style={{ padding: 8, marginRight: 10 }}
+        >
+          <option value="drinks">Drinks</option>
+          <option value="spares">Spares</option>
+          <option value="cleaning">Cleaning</option>
+          <option value="uncategorized">Uncategorized</option>
+        </select>
         <button onClick={handleAddItem}>Add to Stock Room</button>
       </div>
 
+      <div style={{ marginBottom: 20 }}>
+        <label style={{ marginRight: 10 }}>Filter by Category:</label>
+        <select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          style={{ padding: 8 }}
+        >
+          {uniqueCategories.map((cat) => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </select>
+      </div>
+
       <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
-        {stockItems.map((item) => (
+        {filteredItems.map((item) => (
           <li key={item.id} style={{ marginBottom: 20 }}>
-            <strong>{item.name}</strong> — {item.quantity} in stock
+            <strong>{item.name}</strong> — {item.quantity} in stock ({item.category})
             <div style={{ marginTop: 8 }}>
               <div><em>Track Inventory:</em></div>
               {tracks.map(trackId => (

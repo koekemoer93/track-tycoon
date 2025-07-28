@@ -1,7 +1,7 @@
 // src/StockImportPage.js
 import React, { useState } from 'react';
 import Papa from 'papaparse';
-import { collection, setDoc, doc } from 'firebase/firestore';
+import { setDoc, doc } from 'firebase/firestore';
 import { db } from './firebase';
 
 const StockImportPage = () => {
