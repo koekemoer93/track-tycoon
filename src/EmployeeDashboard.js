@@ -4,6 +4,8 @@ import { getAuth } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import AnalyticsCards from './components/AnalyticsCards';
+import { useNavigate } from 'react-router-dom';
+
 const mockTasks = {
   mechanic: [
     { id: 'oil-check', title: 'Check engine oil' },
@@ -22,12 +24,18 @@ const mockTasks = {
 const EmployeeDashboard = () => {
   const [userInfo, setUserInfo] = useState(null);
   const [checked, setChecked] = useState({});
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUser = async () => {
       const auth = getAuth();
       const user = auth.currentUser;
-      if (!user) return;
+
+      // ✅ Redirect if not logged in
+      if (!user) {
+        navigate('/auth'); // or use '/login' if that's your route
+        return;
+      }
 
       const ref = doc(db, 'users', user.uid);
       const snap = await getDoc(ref);
@@ -36,7 +44,7 @@ const EmployeeDashboard = () => {
     };
 
     fetchUser();
-  }, []);
+  }, [navigate]);
 
   const handleCheck = async (taskId) => {
     const newState = { ...checked, [taskId]: !checked[taskId] };

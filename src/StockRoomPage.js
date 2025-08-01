@@ -1,14 +1,7 @@
-import { onSnapshot } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+// src/StockRoomPage.js
 import React, { useState, useEffect } from 'react';
-import {
-  collection,
-  doc,
-  setDoc,
-  updateDoc,
-  increment,
-  getDoc
-} from 'firebase/firestore';
+import { onSnapshot, collection, doc, setDoc, updateDoc, increment, getDoc } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 import { db } from './firebase';
 
 const getCategoryEmoji = (category) => {
@@ -16,11 +9,9 @@ const getCategoryEmoji = (category) => {
     case 'drinks': return '🥤';
     case 'spares': return '🔧';
     case 'cleaning': return '🧽';
-    case 'uncategorized': return '📦';
     default: return '📦';
   }
 };
-
 
 const getCategoryIcon = (category) => {
   switch (category) {
@@ -31,7 +22,6 @@ const getCategoryIcon = (category) => {
   }
 };
 
-
 const tracks = [
   'indykart-eastgate',
   'indykart-mallofthesouth',
@@ -40,9 +30,15 @@ const tracks = [
   'epic-midlands'
 ];
 
+const formatDate = (timestamp) =>
+  timestamp?.toDate
+    ? timestamp.toDate().toLocaleString('en-ZA')
+    : new Date(timestamp).toLocaleString('en-ZA');
+
 const StockRoomPage = () => {
   const [stockItems, setStockItems] = useState([]);
   const [shoppingRequests, setShoppingRequests] = useState([]);
+  const [fulfilledRequests, setFulfilledRequests] = useState([]);
   const [newItemName, setNewItemName] = useState('');
   const [newItemQty, setNewItemQty] = useState('');
   const [newItemCategory, setNewItemCategory] = useState('uncategorized');
@@ -58,7 +54,6 @@ const StockRoomPage = () => {
       const updated = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const sorted = [...updated].sort((a, b) => a.quantity - b.quantity);
       setStockItems(sorted);
-
     });
     unsubscribes.push(unsubscribeStock);
 
@@ -75,7 +70,18 @@ const StockRoomPage = () => {
       });
     });
 
-    unsubscribes.push(...requestListeners);
+    const fulfilledListeners = tracks.map((trackId) => {
+      const ref = collection(db, 'tracks', trackId, 'fulfilledRequests');
+      return onSnapshot(ref, (snapshot) => {
+        let fulfilled = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id, trackId }));
+        setFulfilledRequests(prev => {
+          const allOther = prev.filter(i => i.trackId !== trackId);
+          return [...allOther, ...fulfilled];
+        });
+      });
+    });
+
+    unsubscribes.push(...requestListeners, ...fulfilledListeners);
 
     const fetchUserRole = async () => {
       const auth = getAuth();
@@ -126,18 +132,24 @@ const StockRoomPage = () => {
     const itemId = item.name.toLowerCase().replace(/\s/g, '-');
     const stockRef = doc(db, 'stockRoom', itemId);
     const shoppingRef = doc(db, 'tracks', item.trackId, 'shoppingList', item.id);
+    const fulfilledRef = doc(db, 'tracks', item.trackId, 'fulfilledRequests', item.id);
 
     await updateDoc(stockRef, {
       quantity: increment(-parseInt(item.quantity)),
       [`trackStock.${item.trackId}`]: increment(parseInt(item.quantity))
     });
 
-    await updateDoc(shoppingRef, {
+    const now = new Date();
+
+    await setDoc(fulfilledRef, {
+      ...item,
       status: 'fulfilled',
-      fulfilledAt: new Date()
+      fulfilledAt: now
     });
 
-    alert(`Fulfilled ${item.name} for ${item.trackId}`);
+    await setDoc(shoppingRef, { status: 'archived' }, { merge: true });
+
+    alert(`✅ Fulfilled ${item.name} for ${item.trackId}`);
   };
 
   if (loading) return <p style={{ color: '#fff', padding: 20 }}>Loading...</p>;
@@ -157,80 +169,40 @@ const StockRoomPage = () => {
 
   return (
     <div style={{ padding: 20, color: '#fff' }}>
-      <div
-  style={{
-    display: 'flex',
-    overflowX: 'auto',
-    gap: 12,
-    marginBottom: 20,
-    paddingBottom: 10,
-  }}
->
-  {stockItems.map((item) => (
-    <div
-      key={item.id}
-      style={{
-        background: '#2c2c2e',
-        borderRadius: 12,
-        padding: '10px 16px',
-        minWidth: 160,
-        color: '#fff',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.4)',
-        flexShrink: 0,
-      }}
-    >
-      <div style={{ fontSize: 18 }}>
-        {getCategoryEmoji(item.category)} {item.name}
+      {/* Stock Cards */}
+      <div style={{ display: 'flex', overflowX: 'auto', gap: 12, marginBottom: 20, paddingBottom: 10 }}>
+        {stockItems.map((item) => (
+          <div key={item.id} style={{
+            background: '#2c2c2e', borderRadius: 12, padding: '10px 16px',
+            minWidth: 160, color: '#fff', boxShadow: '0 2px 4px rgba(0,0,0,0.4)', flexShrink: 0
+          }}>
+            <div style={{ fontSize: 18 }}>{getCategoryEmoji(item.category)} {item.name}</div>
+            <div style={{ fontSize: 14, color: '#aaa' }}>{item.quantity} units</div>
+          </div>
+        ))}
       </div>
-      <div style={{ fontSize: 14, color: '#aaa' }}>
-        {item.quantity} units
-      </div>
-    </div>
-  ))}
-</div>
 
       <h2 style={{ fontSize: 28, fontWeight: 600, marginBottom: 20 }}>📦 Stock Control</h2>
-          {/* 🧩 Horizontal Catalog Scroll */}
-<div
-  style={{
-    display: 'flex',
-    overflowX: 'auto',
-    paddingBottom: 10,
-    marginBottom: 30,
-    borderBottom: '1px solid #333'
-  }}
->
-  {stockItems.slice(0, 10).map((item) => (
-    <div
-      key={item.id}
-      style={{
-        minWidth: 140,
-        background: '#2c2c2e',
-        borderRadius: 12,
-        padding: 12,
-        marginRight: 12,
-        color: '#fff',
-        boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
-        flexShrink: 0
-      }}
-    >
-      <div style={{ fontSize: 24, marginBottom: 6 }}>
-        {getCategoryIcon(item.category)}
+
+      {/* Horizontal catalog */}
+      <div style={{ display: 'flex', overflowX: 'auto', paddingBottom: 10, marginBottom: 30, borderBottom: '1px solid #333' }}>
+        {stockItems.slice(0, 10).map((item) => (
+          <div key={item.id} style={{
+            minWidth: 140, background: '#2c2c2e', borderRadius: 12,
+            padding: 12, marginRight: 12, color: '#fff',
+            boxShadow: '0 2px 5px rgba(0,0,0,0.3)', flexShrink: 0
+          }}>
+            <div style={{ fontSize: 24, marginBottom: 6 }}>{getCategoryIcon(item.category)}</div>
+            <div style={{ fontSize: 16, fontWeight: 'bold' }}>{item.name}</div>
+            <div style={{ fontSize: 14, color: '#aaa' }}>{item.quantity} units</div>
+          </div>
+        ))}
       </div>
-      <div style={{ fontSize: 16, fontWeight: 'bold' }}>{item.name}</div>
-      <div style={{ fontSize: 14, color: '#aaa' }}>
-        {item.quantity} units
-      </div>
-    </div>
-  ))}
-</div>
-      {/* Add New Stock Section */}
+
+      {/* Add Stock */}
       <div style={{
-        background: '#1c1c1e',
-        padding: 20,
-        borderRadius: 14,
-        marginBottom: 20,
-        boxShadow: '0 1px 3px rgba(0,0,0,0.4)'
+        background: '#1c1c1e', padding: 20, borderRadius: 14,
+        marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.4)'
       }}>
         <h3 style={{ marginBottom: 10 }}>➕ Add New Stock</h3>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
@@ -246,7 +218,7 @@ const StockRoomPage = () => {
         </div>
       </div>
 
-      {/* Filter Section */}
+      {/* Category Filter */}
       <div style={{ marginBottom: 20 }}>
         <label>Filter by category: </label>
         <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)} style={{ padding: 8 }}>
@@ -256,14 +228,11 @@ const StockRoomPage = () => {
         </select>
       </div>
 
-      {/* Stock Items */}
+      {/* Stock Items List */}
       {filteredItems.map(item => (
         <div key={item.id} style={{
-          background: '#1c1c1e',
-          padding: 15,
-          borderRadius: 12,
-          marginBottom: 12,
-          boxShadow: '0 1px 2px rgba(0,0,0,0.3)'
+          background: '#1c1c1e', padding: 15, borderRadius: 12,
+          marginBottom: 12, boxShadow: '0 1px 2px rgba(0,0,0,0.3)'
         }}>
           <strong>{item.name}</strong> — {item.quantity} units ({item.category})
           <div style={{ fontSize: 12, marginTop: 6, color: '#ccc' }}>Track stock:</div>
@@ -281,16 +250,13 @@ const StockRoomPage = () => {
         </div>
       ))}
 
-      {/* Shopping Requests */}
+      {/* Pending Requests */}
       <hr style={{ margin: '40px 0', borderColor: '#444' }} />
       <h3 style={{ marginBottom: 12 }}>🛒 Pending Requests</h3>
       {shoppingRequests.length === 0 && <p>No pending requests.</p>}
       {shoppingRequests.map(item => (
         <div key={item.id} style={{
-          background: '#2c2c2e',
-          padding: 15,
-          borderRadius: 10,
-          marginBottom: 10
+          background: '#2c2c2e', padding: 15, borderRadius: 10, marginBottom: 10
         }}>
           <strong>{item.name}</strong> — Qty: {item.quantity}
           <div style={{ fontSize: 13, color: '#aaa' }}>Track: {item.trackId}</div>
@@ -300,6 +266,20 @@ const StockRoomPage = () => {
           >
             ✅ Fulfill
           </button>
+        </div>
+      ))}
+
+      {/* Fulfilled Requests */}
+      <hr style={{ margin: '40px 0', borderColor: '#444' }} />
+      <h3 style={{ marginBottom: 12 }}>✅ Fulfilled Requests</h3>
+      {fulfilledRequests.length === 0 && <p>No fulfilled requests yet.</p>}
+      {fulfilledRequests.map(item => (
+        <div key={item.id} style={{
+          background: '#1c1c1e', padding: 15, borderRadius: 10, marginBottom: 10
+        }}>
+          <strong>{item.name}</strong> — Qty: {item.quantity}
+          <div style={{ fontSize: 13, color: '#aaa' }}>Track: {item.trackId}</div>
+          <div style={{ fontSize: 12, color: '#666' }}>Fulfilled: {formatDate(item.fulfilledAt)}</div>
         </div>
       ))}
     </div>

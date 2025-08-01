@@ -41,6 +41,9 @@ const TrackDashboard = () => {
     fetchTracks();
   }, []);
 
+        console.log('📊 Tracks fetched:', tracks);
+
+
   return (
     <div className="dashboard">
       <div style={{ marginBottom: 20 }}>

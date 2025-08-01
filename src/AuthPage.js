@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from './firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 const roleOTPs = {
@@ -37,15 +37,18 @@ const AuthPage = () => {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
+        const isAdmin = role === 'owner' || role === 'manager'; // optional: manager gets admin access too
+
         await setDoc(doc(db, 'users', user.uid), {
           name,
           email,
           role,
           assignedTrack: null,
+          isAdmin,
         });
 
-        if (role === 'owner') {
-          navigate('/dashboard');
+        if (isAdmin) {
+          navigate('/track-dashboard');
         } else {
           navigate('/employee-dashboard');
         }
@@ -53,12 +56,11 @@ const AuthPage = () => {
       } else {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
-
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         const userData = userDoc.data();
 
-        if (userData?.role === 'owner') {
-          navigate('/dashboard');
+        if (userData?.isAdmin || userData?.role === 'owner') {
+          navigate('/track-dashboard');
         } else {
           navigate('/employee-dashboard');
         }
