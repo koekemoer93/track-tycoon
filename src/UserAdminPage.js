@@ -1,4 +1,3 @@
-// src/UserAdminPage.js
 import React, { useEffect, useState } from 'react';
 import { db } from './firebase';
 import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
@@ -52,56 +51,103 @@ const UserAdminPage = () => {
   }
 
   return (
-    <div style={{ padding: 30, background: '#000', minHeight: '100vh', color: '#fff' }}>
-      <h2>User Admin Panel</h2>
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 20 }}>
-        <thead>
-          <tr>
-            <th style={thStyle}>Name</th>
-            <th style={thStyle}>Email</th>
-            <th style={thStyle}>Role</th>
-            <th style={thStyle}>Assigned Track</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map(user => (
-            <tr key={user.id}>
-              <td style={tdStyle}>{user.name}</td>
-              <td style={tdStyle}>{user.email}</td>
-              <td style={tdStyle}>
-                <select value={user.role} onChange={(e) => handleRoleChange(user.id, e.target.value)}>
-                  <option value="owner">Owner</option>
-                  <option value="admin">Admin</option>
-                  <option value="manager">Manager</option>
-                  <option value="marshal">Marshal</option>
-                  <option value="mechanic">Mechanic</option>
-                  <option value="hr">HR</option>
-                </select>
-              </td>
-              <td style={tdStyle}>
-                <input
-                  type="text"
-                  value={user.assignedTrack || ''}
-                  onChange={(e) => handleTrackChange(user.id, e.target.value)}
-                />
-              </td>
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(to bottom right, #0f0f0f, #1a1a1a)',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'flex-start',
+      padding: 40,
+      fontFamily: 'Helvetica, sans-serif',
+      color: '#fff'
+    }}>
+      <div style={{
+        width: '100%',
+        maxWidth: 900,
+        background: 'rgba(255, 255, 255, 0.05)',
+        backdropFilter: 'blur(12px)',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        borderRadius: 16,
+        padding: 30,
+        boxShadow: '0 0 20px rgba(0,0,0,0.3)'
+      }}>
+        <h2>👥 User Admin Panel</h2>
+
+        <table style={{
+          width: '100%',
+          borderCollapse: 'collapse',
+          marginTop: 20,
+        }}>
+          <thead>
+            <tr>
+              <th style={thStyle}>Name</th>
+              <th style={thStyle}>Email</th>
+              <th style={thStyle}>Role</th>
+              <th style={thStyle}>Assigned Track</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {users.map(user => (
+              <tr key={user.id}>
+                <td style={tdStyle}>{user.name}</td>
+                <td style={tdStyle}>{user.email}</td>
+                <td style={tdStyle}>
+                  <select
+                    value={user.role}
+                    onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                    style={selectStyle}
+                  >
+                    <option value="owner">Owner</option>
+                    <option value="admin">Admin</option>
+                    <option value="manager">Manager</option>
+                    <option value="marshal">Marshal</option>
+                    <option value="mechanic">Mechanic</option>
+                    <option value="hr">HR</option>
+                  </select>
+                </td>
+                <td style={tdStyle}>
+                  <input
+                    type="text"
+                    value={user.assignedTrack || ''}
+                    onChange={(e) => handleTrackChange(user.id, e.target.value)}
+                    style={inputStyle}
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
 
 const thStyle = {
   borderBottom: '1px solid #555',
-  padding: '10px',
+  padding: '12px 10px',
   textAlign: 'left',
+  fontSize: 14,
+  fontWeight: 'bold'
 };
 
 const tdStyle = {
   borderBottom: '1px solid #333',
-  padding: '10px',
+  padding: '12px 10px',
+  fontSize: 14,
+};
+
+const inputStyle = {
+  padding: '6px 10px',
+  borderRadius: 8,
+  border: '1px solid #444',
+  backgroundColor: '#2a2a2a',
+  color: '#fff',
+  width: '100%'
+};
+
+const selectStyle = {
+  ...inputStyle,
+  appearance: 'none'
 };
 
 export default UserAdminPage;

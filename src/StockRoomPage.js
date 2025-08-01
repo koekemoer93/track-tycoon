@@ -168,120 +168,119 @@ const StockRoomPage = () => {
   ];
 
   return (
-    <div style={{ padding: 20, color: '#fff' }}>
-      {/* Stock Cards */}
-      <div style={{ display: 'flex', overflowX: 'auto', gap: 12, marginBottom: 20, paddingBottom: 10 }}>
-        {stockItems.map((item) => (
-          <div key={item.id} style={{
-            background: '#2c2c2e', borderRadius: 12, padding: '10px 16px',
-            minWidth: 160, color: '#fff', boxShadow: '0 2px 4px rgba(0,0,0,0.4)', flexShrink: 0
-          }}>
-            <div style={{ fontSize: 18 }}>{getCategoryEmoji(item.category)} {item.name}</div>
-            <div style={{ fontSize: 14, color: '#aaa' }}>{item.quantity} units</div>
-          </div>
-        ))}
-      </div>
-
-      <h2 style={{ fontSize: 28, fontWeight: 600, marginBottom: 20 }}>📦 Stock Control</h2>
-
-      {/* Horizontal catalog */}
-      <div style={{ display: 'flex', overflowX: 'auto', paddingBottom: 10, marginBottom: 30, borderBottom: '1px solid #333' }}>
-        {stockItems.slice(0, 10).map((item) => (
-          <div key={item.id} style={{
-            minWidth: 140, background: '#2c2c2e', borderRadius: 12,
-            padding: 12, marginRight: 12, color: '#fff',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.3)', flexShrink: 0
-          }}>
-            <div style={{ fontSize: 24, marginBottom: 6 }}>{getCategoryIcon(item.category)}</div>
-            <div style={{ fontSize: 16, fontWeight: 'bold' }}>{item.name}</div>
-            <div style={{ fontSize: 14, color: '#aaa' }}>{item.quantity} units</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Add Stock */}
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(to bottom right, #0f0f0f, #1a1a1a)',
+      padding: 20,
+      fontFamily: 'Helvetica, sans-serif',
+      color: '#fff'
+    }}>
       <div style={{
-        background: '#1c1c1e', padding: 20, borderRadius: 14,
-        marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.4)'
+        background: 'rgba(255,255,255,0.05)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: 16,
+        backdropFilter: 'blur(12px)',
+        padding: 24,
+        maxWidth: 1000,
+        margin: '0 auto'
       }}>
-        <h3 style={{ marginBottom: 10 }}>➕ Add New Stock</h3>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-          <input placeholder="Item name" value={newItemName} onChange={e => setNewItemName(e.target.value)} style={{ padding: 10, flex: 1 }} />
-          <input placeholder="Qty" value={newItemQty} onChange={e => setNewItemQty(e.target.value)} type="number" style={{ padding: 10, width: 100 }} />
-          <select value={newItemCategory} onChange={e => setNewItemCategory(e.target.value)} style={{ padding: 10 }}>
-            <option value="drinks">Drinks</option>
-            <option value="spares">Spares</option>
-            <option value="cleaning">Cleaning</option>
-            <option value="uncategorized">Uncategorized</option>
-          </select>
-          <button onClick={handleAddItem} style={{ padding: '10px 20px', background: '#34c759', color: '#fff', border: 'none', borderRadius: 8 }}>Add</button>
-        </div>
-      </div>
+        <h2 style={{ fontSize: 28, fontWeight: 600, marginBottom: 20 }}>📦 Stock Control</h2>
 
-      {/* Category Filter */}
-      <div style={{ marginBottom: 20 }}>
-        <label>Filter by category: </label>
-        <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)} style={{ padding: 8 }}>
-          {uniqueCategories.map(cat => (
-            <option key={cat} value={cat}>{cat}</option>
-          ))}
-        </select>
-      </div>
-
-      {/* Stock Items List */}
-      {filteredItems.map(item => (
-        <div key={item.id} style={{
-          background: '#1c1c1e', padding: 15, borderRadius: 12,
-          marginBottom: 12, boxShadow: '0 1px 2px rgba(0,0,0,0.3)'
-        }}>
-          <strong>{item.name}</strong> — {item.quantity} units ({item.category})
-          <div style={{ fontSize: 12, marginTop: 6, color: '#ccc' }}>Track stock:</div>
-          {tracks.map(trackId => (
-            <div key={trackId} style={{ marginLeft: 10 }}>
-              {trackId}: {item.trackStock?.[trackId] || 0}
-              <button
-                onClick={() => handleTransfer(item.id, trackId)}
-                style={{ marginLeft: 8, fontSize: 12, padding: '2px 8px', borderRadius: 6, border: 'none', background: '#0a84ff', color: '#fff' }}
-              >
-                Transfer
-              </button>
+        {/* Stock Cards */}
+        <div style={{ display: 'flex', overflowX: 'auto', gap: 12, marginBottom: 20, paddingBottom: 10 }}>
+          {stockItems.map((item) => (
+            <div key={item.id} style={{
+              background: '#2c2c2e', borderRadius: 12, padding: '10px 16px',
+              minWidth: 160, color: '#fff', boxShadow: '0 2px 4px rgba(0,0,0,0.4)', flexShrink: 0
+            }}>
+              <div style={{ fontSize: 18 }}>{getCategoryEmoji(item.category)} {item.name}</div>
+              <div style={{ fontSize: 14, color: '#aaa' }}>{item.quantity} units</div>
             </div>
           ))}
         </div>
-      ))}
 
-      {/* Pending Requests */}
-      <hr style={{ margin: '40px 0', borderColor: '#444' }} />
-      <h3 style={{ marginBottom: 12 }}>🛒 Pending Requests</h3>
-      {shoppingRequests.length === 0 && <p>No pending requests.</p>}
-      {shoppingRequests.map(item => (
-        <div key={item.id} style={{
-          background: '#2c2c2e', padding: 15, borderRadius: 10, marginBottom: 10
+        {/* Add Stock */}
+        <div style={{
+          background: '#1c1c1e', padding: 20, borderRadius: 14,
+          marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.4)'
         }}>
-          <strong>{item.name}</strong> — Qty: {item.quantity}
-          <div style={{ fontSize: 13, color: '#aaa' }}>Track: {item.trackId}</div>
-          <button
-            onClick={() => fulfillRequest(item)}
-            style={{ marginTop: 8, padding: '6px 16px', background: '#30d158', color: '#000', border: 'none', borderRadius: 8 }}
-          >
-            ✅ Fulfill
-          </button>
+          <h3 style={{ marginBottom: 10 }}>➕ Add New Stock</h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+            <input placeholder="Item name" value={newItemName} onChange={e => setNewItemName(e.target.value)} style={{ padding: 10, flex: 1 }} />
+            <input placeholder="Qty" value={newItemQty} onChange={e => setNewItemQty(e.target.value)} type="number" style={{ padding: 10, width: 100 }} />
+            <select value={newItemCategory} onChange={e => setNewItemCategory(e.target.value)} style={{ padding: 10 }}>
+              <option value="drinks">Drinks</option>
+              <option value="spares">Spares</option>
+              <option value="cleaning">Cleaning</option>
+              <option value="uncategorized">Uncategorized</option>
+            </select>
+            <button onClick={handleAddItem} style={{ padding: '10px 20px', background: '#34c759', color: '#fff', border: 'none', borderRadius: 8 }}>Add</button>
+          </div>
         </div>
-      ))}
 
-      {/* Fulfilled Requests */}
-      <hr style={{ margin: '40px 0', borderColor: '#444' }} />
-      <h3 style={{ marginBottom: 12 }}>✅ Fulfilled Requests</h3>
-      {fulfilledRequests.length === 0 && <p>No fulfilled requests yet.</p>}
-      {fulfilledRequests.map(item => (
-        <div key={item.id} style={{
-          background: '#1c1c1e', padding: 15, borderRadius: 10, marginBottom: 10
-        }}>
-          <strong>{item.name}</strong> — Qty: {item.quantity}
-          <div style={{ fontSize: 13, color: '#aaa' }}>Track: {item.trackId}</div>
-          <div style={{ fontSize: 12, color: '#666' }}>Fulfilled: {formatDate(item.fulfilledAt)}</div>
+        {/* Category Filter */}
+        <div style={{ marginBottom: 20 }}>
+          <label>Filter by category: </label>
+          <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)} style={{ padding: 8 }}>
+            {uniqueCategories.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
         </div>
-      ))}
+
+        {/* Stock List */}
+        {filteredItems.map(item => (
+          <div key={item.id} style={{
+            background: '#1c1c1e', padding: 15, borderRadius: 12,
+            marginBottom: 12, boxShadow: '0 1px 2px rgba(0,0,0,0.3)'
+          }}>
+            <strong>{item.name}</strong> — {item.quantity} units ({item.category})
+            <div style={{ fontSize: 12, marginTop: 6, color: '#ccc' }}>Track stock:</div>
+            {tracks.map(trackId => (
+              <div key={trackId} style={{ marginLeft: 10 }}>
+                {trackId}: {item.trackStock?.[trackId] || 0}
+                <button
+                  onClick={() => handleTransfer(item.id, trackId)}
+                  style={{ marginLeft: 8, fontSize: 12, padding: '2px 8px', borderRadius: 6, border: 'none', background: '#0a84ff', color: '#fff' }}
+                >
+                  Transfer
+                </button>
+              </div>
+            ))}
+          </div>
+        ))}
+
+        <hr style={{ margin: '40px 0', borderColor: '#444' }} />
+        <h3 style={{ marginBottom: 12 }}>🛒 Pending Requests</h3>
+        {shoppingRequests.length === 0 && <p>No pending requests.</p>}
+        {shoppingRequests.map(item => (
+          <div key={item.id} style={{
+            background: '#2c2c2e', padding: 15, borderRadius: 10, marginBottom: 10
+          }}>
+            <strong>{item.name}</strong> — Qty: {item.quantity}
+            <div style={{ fontSize: 13, color: '#aaa' }}>Track: {item.trackId}</div>
+            <button
+              onClick={() => fulfillRequest(item)}
+              style={{ marginTop: 8, padding: '6px 16px', background: '#30d158', color: '#000', border: 'none', borderRadius: 8 }}
+            >
+              ✅ Fulfill
+            </button>
+          </div>
+        ))}
+
+        <hr style={{ margin: '40px 0', borderColor: '#444' }} />
+        <h3 style={{ marginBottom: 12 }}>✅ Fulfilled Requests</h3>
+        {fulfilledRequests.length === 0 && <p>No fulfilled requests yet.</p>}
+        {fulfilledRequests.map(item => (
+          <div key={item.id} style={{
+            background: '#1c1c1e', padding: 15, borderRadius: 10, marginBottom: 10
+          }}>
+            <strong>{item.name}</strong> — Qty: {item.quantity}
+            <div style={{ fontSize: 13, color: '#aaa' }}>Track: {item.trackId}</div>
+            <div style={{ fontSize: 12, color: '#666' }}>Fulfilled: {formatDate(item.fulfilledAt)}</div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

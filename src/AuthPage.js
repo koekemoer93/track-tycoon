@@ -1,4 +1,3 @@
-// src/AuthPage.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from './firebase';
@@ -36,8 +35,7 @@ const AuthPage = () => {
 
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
-
-        const isAdmin = role === 'owner' || role === 'manager'; // optional: manager gets admin access too
+        const isAdmin = role === 'owner' || role === 'manager';
 
         await setDoc(doc(db, 'users', user.uid), {
           name,
@@ -47,23 +45,14 @@ const AuthPage = () => {
           isAdmin,
         });
 
-        if (isAdmin) {
-          navigate('/track-dashboard');
-        } else {
-          navigate('/employee-dashboard');
-        }
-
+        navigate(isAdmin ? '/track-dashboard' : '/employee-dashboard');
       } else {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         const userData = userDoc.data();
 
-        if (userData?.isAdmin || userData?.role === 'owner') {
-          navigate('/track-dashboard');
-        } else {
-          navigate('/employee-dashboard');
-        }
+        navigate(userData?.isAdmin || userData?.role === 'owner' ? '/track-dashboard' : '/employee-dashboard');
       }
     } catch (err) {
       setError(err.message);
@@ -71,40 +60,61 @@ const AuthPage = () => {
   };
 
   return (
-    <div style={{ background: '#000', minHeight: '100vh', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <form onSubmit={handleSubmit} style={{ background: '#1c1c1c', padding: 30, borderRadius: 20, width: 320 }}>
-        <h2 style={{ textAlign: 'center', marginBottom: 20 }}>{isRegister ? 'Register' : 'Login'}</h2>
-
-        {isRegister && (
-          <>
-            <input type="text" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required style={inputStyle} />
-            <select value={role} onChange={(e) => setRole(e.target.value)} style={inputStyle}>
-              <option value="owner">Owner</option>
-              <option value="manager">Manager</option>
-              <option value="marshal">Marshal</option>
-              <option value="mechanic">Mechanic</option>
-              <option value="hr">HR</option>
-            </select>
-            <input type="text" placeholder="OTP" value={otp} onChange={(e) => setOtp(e.target.value)} required style={inputStyle} />
-          </>
-        )}
-
-        <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required style={inputStyle} />
-        <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required style={inputStyle} />
-
-        <button type="submit" style={{ ...inputStyle, backgroundColor: '#4caf50', color: '#fff', fontWeight: 'bold' }}>
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(to bottom right, #0f0f0f, #1a1a1a)',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 20
+    }}>
+      <div style={{
+        background: 'rgba(255,255,255,0.05)',
+        backdropFilter: 'blur(12px)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: 20,
+        padding: 30,
+        width: '100%',
+        maxWidth: 360,
+        color: '#fff',
+        boxShadow: '0 0 20px rgba(0,0,0,0.3)'
+      }}>
+        <h2 style={{ textAlign: 'center', marginBottom: 20 }}>
           {isRegister ? 'Register' : 'Login'}
-        </button>
+        </h2>
 
-        {error && <p style={{ color: 'red', marginTop: 10 }}>{error}</p>}
+        <form onSubmit={handleSubmit}>
+          {isRegister && (
+            <>
+              <input type="text" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required style={inputStyle} />
+              <select value={role} onChange={(e) => setRole(e.target.value)} style={inputStyle}>
+                <option value="owner">Owner</option>
+                <option value="manager">Manager</option>
+                <option value="marshal">Marshal</option>
+                <option value="mechanic">Mechanic</option>
+                <option value="hr">HR</option>
+              </select>
+              <input type="text" placeholder="OTP" value={otp} onChange={(e) => setOtp(e.target.value)} required style={inputStyle} />
+            </>
+          )}
 
-        <p style={{ marginTop: 15, textAlign: 'center' }}>
-          {isRegister ? 'Already have an account?' : 'Don’t have an account?'}{' '}
-          <span style={{ textDecoration: 'underline', cursor: 'pointer' }} onClick={() => setIsRegister(!isRegister)}>
-            {isRegister ? 'Login' : 'Register'}
-          </span>
-        </p>
-      </form>
+          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required style={inputStyle} />
+          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required style={inputStyle} />
+
+          <button type="submit" style={buttonStyle}>
+            {isRegister ? 'Register' : 'Login'}
+          </button>
+
+          {error && <p style={{ color: 'red', marginTop: 10 }}>{error}</p>}
+
+          <p style={{ marginTop: 15, textAlign: 'center' }}>
+            {isRegister ? 'Already have an account?' : 'Don’t have an account?'}{' '}
+            <span style={{ textDecoration: 'underline', cursor: 'pointer' }} onClick={() => setIsRegister(!isRegister)}>
+              {isRegister ? 'Login' : 'Register'}
+            </span>
+          </p>
+        </form>
+      </div>
     </div>
   );
 };
@@ -117,6 +127,14 @@ const inputStyle = {
   border: '1px solid #444',
   backgroundColor: '#2a2a2a',
   color: '#fff'
+};
+
+const buttonStyle = {
+  ...inputStyle,
+  backgroundColor: '#30d158',
+  color: '#000',
+  fontWeight: 'bold',
+  cursor: 'pointer'
 };
 
 export default AuthPage;

@@ -13,8 +13,7 @@ import RoleRedirect from './RoleRedirect';
 import UploadPage from './UploadPage';
 import AdminRegisterUser from './AdminRegisterUser';
 import ProtectedRoute from './components/ProtectedRoute';
-
-
+import TaskHistory from './TaskHistory';
 
 function App() {
   return (
@@ -24,9 +23,9 @@ function App() {
          <Route
             path="/track-dashboard"
             element={
-    <ProtectedRoute requireAdmin={true}>
-      <TrackDashboard />
-    </ProtectedRoute>
+            <ProtectedRoute requireAdmin={true}>
+            <TrackDashboard />
+            </ProtectedRoute>
   }
 />
 <Route
@@ -46,7 +45,7 @@ function App() {
     </ProtectedRoute>
   }
 />
-
+        <Route path="/task-history" element={<TaskHistory />} />
         <Route path="/admin-register" element={<AdminRegisterUser />} />
         <Route path="/upload" element={<UploadPage />} />
         <Route path="/" element={<RoleRedirect />} />
