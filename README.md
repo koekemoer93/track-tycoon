@@ -1,87 +1,70 @@
-# 🏁 Track Tycoon — Go-Karting Operations App
+# 🏁 Track Tycoon
 
-**Track Tycoon** is a full-featured web + mobile app for managing employee tasks, track operations, stock control, and analytics across multiple go-kart tracks.
+Track Tycoon is a web + mobile app built for managing daily operations, staff, and inventory across multiple go-karting tracks.  
+It features real-time task tracking, stock control, and role-based dashboards for employees and owners.
 
 ---
 
-## ✅ Features Completed (as of July 28, 2025)
+## 🚀 Live Features (As of Latest Commit)
 
-### 🧑‍💼 Authentication
-- Combined **Login/Register page** with dark Apple-style UI
-- **Role-based OTP verification** for: Owner, Manager, Mechanic, Marshal, HR
-- Firebase Auth integrated with Firestore user documents
+### ✅ Authentication
+- Firebase Authentication (Login & Register)
+- OTP-based role assignment
+- Role-based redirects (Owner/Admin → Dashboard, Employees → Checklist)
 
-### 🎯 Owner Dashboard
-- Inspired by Apple Fitness Summary UI
-- Displays:
-  - 🟣 Tasks Done ring
-  - 🔵 Shopping Requests ring
-  - 🟢 Cleanliness ring
-- Tracks listed below rings with progress bars
-- Clickable to open per-track pages
-- Fully themed to match dark fitness design
+### ✅ Role Management
+- Roles: owner, manager, marshal, mechanic, cleaner, HR
+- `isAdmin` access flag for elevated features (StockRoom, Track Analytics)
 
-### ✅ Role-Based Pages
-- Owner and Admins see the **full dashboard + stock control**
-- Employees redirected to **EmployeeDashboard** showing daily tasks
-- RoleRedirect logic built to route users based on their Firestore `role`
+### ✅ Dashboard System
+- 📊 **Owner Dashboard** with progress rings (Tasks, Shopping, Cleanliness)
+- 👷 **Employee Dashboard** with daily tasks by role & track
+- 🧠 Apple Fitness-inspired UI
 
-### 🛒 Stock Control Room
-- Centralized stock management
-- Add new stock (name, quantity, category)
-- Transfer stock to specific tracks
-- Track-specific inventory counters
-- 🔔 Auto-updating shopping requests list
-- ✅ Fulfill requests from within UI
-- 💡 Filters by category (e.g., drinks, spares, cleaning)
-- New **top-of-page product catalog summary** with low stock alerts
+### ✅ Real-Time Daily Tasks
+- Role-based checklist templates per day (loaded from Firestore)
+- Tasks are saved with checkbox progress
+- Optional image upload per task (coming soon)
 
-### 📦 Track Pages
-- Checklist system per role (e.g., marshal, mechanic, cleaner)
-- Tasks saved to Firestore per user
-- Circular progress indicators
-- Real-time shopping list with Firestore sync
-- Image upload to Firebase Storage
-- All progress saved by user/track
+### ✅ Shopping List Requests
+- Employees request stock (e.g. “2x engine oil”)
+- Stored under each `tracks/{trackId}/shoppingList`
+- Linked to the StockRoom for fulfillment
 
-### 🧭 Navigation
-- Top navigation bar with icons:
-  - Dashboard
-  - Employee Tasks
-  - Stock Room
-- Active tab highlight
-- Routes:
-  - `/` → AuthPage
-  - `/dashboard` → Owner dashboard
-  - `/employee-dashboard` → Employee view
-  - `/stockroom` → Stock Control
-  - `/track/:trackId` → Track-specific page
+### ✅ StockRoom System (Admin-Only)
+- View & manage central inventory (`stockRoom` collection)
+- Transfer stock to individual tracks (updates `trackStock`)
+- View all pending shopping requests from tracks
+- ✅ Fulfill requests with one click
+- ✅ Move fulfilled items to `fulfilledRequests` subcollection
+- Timestamped fulfillment log
+- Category filter (Drinks, Spares, Cleaning)
+
+### ✅ Firestore Data Structure
+- `users/{uid}` → role, name, track, isAdmin
+- `tracks/{trackId}` → metadata + shoppingList
+- `stockRoom/{itemId}` → quantity, category, trackStock
+- `templates/{trackId}_{role}_{day}` → dynamic checklist templates
 
 ---
 
 ## 🛠 Tech Stack
 
-- React.js (frontend)
-- Firebase Auth + Firestore + Storage
-- React Router DOM
-- React Circular Progressbar
-- Custom CSS (dark UI inspired by Apple Fitness app)
+- **React.js**
+- **Firebase Auth**
+- **Firebase Firestore**
+- **Firebase Storage** (image upload coming soon)
+- **React Router**
+- **CSS** (custom dark Apple-style theme)
 
 ---
 
-## 🚧 Upcoming Features
+## 🔒 Access Control
 
-- Admin role and admin panel
-- Real-time location check-ins
-- Task approval workflow
-- Signature capture, file uploads, recurring tasks
-- Analytics per role, track, and week
-- PDF report export
-- Mobile responsiveness
+| Role     | Access                                           |
+|----------|--------------------------------------------------|
+| Owner    | Full access to all dashboards & StockRoom        |
+| Manager  | Same as owner (via `isAdmin`)                    |
+| Others   | Employee Checklist & Track-specific tasks only   |
 
 ---
-
-## 📂 GitHub Management
-
-All code is backed up regularly using proper commits.  
-Design inspired by Apple Health/Fitness, but tailored to go-kart track ops.
