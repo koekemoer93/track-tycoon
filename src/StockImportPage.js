@@ -22,23 +22,49 @@ const StockImportPage = () => {
   };
 
   const handleImport = async () => {
+    if (!csvData.length) return alert("No CSV data loaded.");
     setUploading(true);
-    for (const item of csvData) {
-      const id = item.name.toLowerCase().replace(/\s+/g, '-');
-      await setDoc(doc(db, 'stockRoom', id), {
-        name: item.name,
-        quantity: parseInt(item.quantity || 0),
-        unit: item.unit || 'units',
-        trackStock: {}
-      });
+
+    const failedRows = [];
+
+    for (let i = 0; i < csvData.length; i++) {
+      const row = csvData[i];
+      const name = row["name"] || row["Name"] || '';
+      const qty = parseInt(row["quantity"] || row["qty"] || row["Quantity"] || 0);
+      const unit = row["unit"] || row["Unit"] || 'units';
+      const category = row["category"] || row["Category"] || 'uncategorized';
+
+      if (!name || isNaN(qty)) {
+        failedRows.push(i + 2); // +2 to account for header and 0-index
+        continue;
+      }
+
+      const id = name.toLowerCase().replace(/\s+/g, '-');
+      try {
+        await setDoc(doc(db, 'stockRoom', id), {
+          name,
+          quantity: qty,
+          unit,
+          category: category.toLowerCase(),
+          trackStock: {}
+        });
+      } catch (err) {
+        console.error(`Error importing row ${i + 2}:`, err);
+        failedRows.push(i + 2);
+      }
     }
-    alert('Stock items imported!');
+
     setUploading(false);
+    if (failedRows.length > 0) {
+      alert(`Some rows failed to import: ${failedRows.join(', ')}`);
+    } else {
+      alert("✅ All stock items imported successfully!");
+    }
   };
 
   return (
     <div style={{ padding: 20, color: '#fff' }}>
-      <h2>📥 Import Stock CSV</h2>
+      <h2>Import Stock CSV</h2>
       <input type="file" accept=".csv" onChange={handleFileUpload} />
       {csvData.length > 0 && (
         <>

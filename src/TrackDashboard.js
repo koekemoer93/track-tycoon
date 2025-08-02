@@ -2,12 +2,9 @@
 import AnalyticsCards from './components/AnalyticsCards';
 import React, { useEffect, useState } from 'react';
 import './TrackDashboard.css';
-import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
-import 'react-circular-progressbar/dist/styles.css';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from './firebase';
 import { useNavigate } from 'react-router-dom';
-import RingCard from './components/RingCard';
 
 const TrackDashboard = () => {
   const [tracks, setTracks] = useState([]);
@@ -28,7 +25,7 @@ const TrackDashboard = () => {
             id: doc.id,
             name: d.name,
             completion,
-            lastUpdated: 'Today 14:30', // placeholder for now
+            lastUpdated: 'Today 14:30',
           };
         });
 
@@ -41,20 +38,17 @@ const TrackDashboard = () => {
     fetchTracks();
   }, []);
 
-        console.log('📊 Tracks fetched:', tracks);
-
-
   return (
-    <div className="dashboard">
+    <div className="dashboard glass-container">
       <div style={{ marginBottom: 20 }}>
-        <p style={{ color: '#aaa', fontSize: 14 }}>
+        <p className="date">
           {new Date().toLocaleDateString('en-ZA', {
             weekday: 'long',
             day: 'numeric',
             month: 'short',
           })}
         </p>
-        <h1 style={{ color: '#fff', fontSize: 28, fontWeight: 'bold' }}>Track Tycoon Summary</h1>
+        <h1>Track Tycoon Summary</h1>
       </div>
 
       <AnalyticsCards
@@ -64,63 +58,39 @@ const TrackDashboard = () => {
         mostActiveRole="Marshal"
       />
 
-      <div style={{ display: 'flex', marginBottom: 30 }}>
-        <RingCard label="Tasks Done" value={97} target={125} color="#ff2d55" unit="" />
-        <RingCard label="Shopping Requests" value={3} target={10} color="#5ac8fa" unit="" />
-        <RingCard label="Cleanliness" value={88} target={100} color="#34c759" unit="%" />
-      </div>
-
-      <div style={{ marginTop: 20 }}>
-        {tracks.map((track, i) => (
+      <div className="track-grid">
+        {tracks.map(track => (
           <div
-            key={i}
+            key={track.id}
+            className="track-card"
             onClick={() => navigate(`/track/${track.id}`)}
-            style={{
-              background: '#1c1c1e',
-              padding: '15px 20px',
-              borderRadius: 14,
-              marginBottom: 12,
-              color: '#fff',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              cursor: 'pointer',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.4)',
-            }}
           >
-            <div>
-              <p style={{ fontSize: 16, fontWeight: 600 }}>{track.name}</p>
-              <p style={{ fontSize: 12, color: '#aaa' }}>Completion: {track.completion}%</p>
-            </div>
-            <div style={{ fontSize: 12, color: '#666' }}>
-              {track.lastUpdated || '—'}
+            <div className="track-info">
+              <h2>{track.name}</h2>
+              <p className="label">Completion</p>
+              <div className="track-bar">
+                <div
+                  className="track-fill"
+                  style={{ width: `${track.completion}%` }}
+                ></div>
+              </div>
+              <p className="percent-label">{track.completion}%</p>
+              <p className="timestamp">Updated: {track.lastUpdated}</p>
             </div>
           </div>
         ))}
 
         {/* Store Room Card */}
-<div
-  onClick={() => navigate('/stockroom')}
-  style={{
-    background: '#1c1c1e',
-    padding: '15px 20px',
-    borderRadius: 14,
-    marginBottom: 12,
-    color: '#fff',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    cursor: 'pointer',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.4)',
-  }}
->
-  <div>
-    <p style={{ fontSize: 16, fontWeight: 600 }}>Store Room</p>
-    <p style={{ fontSize: 12, color: '#aaa' }}>Central Stock Manager</p>
-  </div>
-  <div style={{ fontSize: 12, color: '#666' }}>—</div>
-</div>
-
+        <div
+          className="track-card"
+          onClick={() => navigate('/stockroom')}
+        >
+          <div className="track-info">
+            <h2>Store Room</h2>
+            <p className="label">Central Stock Manager</p>
+            <p className="timestamp">—</p>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -1,0 +1,75 @@
+/* src/StockRoomPage.css */
+
+body {
+  font-family: Helvetica, sans-serif;
+  background: #000;
+  color: #fff;
+}
+
+input, select, button {
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  margin-bottom: 10px;
+  background: #1c1c1e;
+  color: white;
+}
+
+input::placeholder {
+  color: #888;
+}
+
+button {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.stock-glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+  padding: 16px;
+  margin: 10px 0;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  color: white;
+}
+
+.stock-title-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.stock-name {
+  font-weight: bold;
+}
+
+.stock-qty {
+  opacity: 0.8;
+}
+
+.stock-bar {
+  background: rgba(255, 255, 255, 0.1);
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.stock-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.stock-cat {
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+.stock-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}

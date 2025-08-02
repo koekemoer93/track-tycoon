@@ -1,285 +1,141 @@
 // src/StockRoomPage.js
-import React, { useState, useEffect } from 'react';
-import { onSnapshot, collection, doc, setDoc, updateDoc, increment, getDoc } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import React, { useEffect, useState } from 'react';
 import { db } from './firebase';
-
-const getCategoryEmoji = (category) => {
-  switch (category) {
-    case 'drinks': return '🥤';
-    case 'spares': return '🔧';
-    case 'cleaning': return '🧽';
-    default: return '📦';
-  }
-};
-
-const getCategoryIcon = (category) => {
-  switch (category) {
-    case 'drinks': return '🥤';
-    case 'spares': return '🛠️';
-    case 'cleaning': return '🧽';
-    default: return '📦';
-  }
-};
-
-const tracks = [
-  'indykart-eastgate',
-  'indykart-mallofthesouth',
-  'indykart-clearwater',
-  'epic-syringa',
-  'epic-midlands'
-];
-
-const formatDate = (timestamp) =>
-  timestamp?.toDate
-    ? timestamp.toDate().toLocaleString('en-ZA')
-    : new Date(timestamp).toLocaleString('en-ZA');
+import {
+  collection,
+  doc,
+  onSnapshot,
+  setDoc,
+  updateDoc,
+  getDocs,
+  increment
+} from 'firebase/firestore';
+import './StockRoomPage.css';
 
 const StockRoomPage = () => {
   const [stockItems, setStockItems] = useState([]);
-  const [shoppingRequests, setShoppingRequests] = useState([]);
-  const [fulfilledRequests, setFulfilledRequests] = useState([]);
-  const [newItemName, setNewItemName] = useState('');
-  const [newItemQty, setNewItemQty] = useState('');
-  const [newItemCategory, setNewItemCategory] = useState('uncategorized');
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [userRole, setUserRole] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [newItem, setNewItem] = useState('');
+  const [newQty, setNewQty] = useState('');
+  const [newCat, setNewCat] = useState('uncategorized');
+  const [tracks, setTracks] = useState([]);
+  const [transferItem, setTransferItem] = useState('');
+  const [transferTrack, setTransferTrack] = useState('');
+  const [transferQty, setTransferQty] = useState('');
 
   useEffect(() => {
-    const unsubscribes = [];
-
-    const stockRef = collection(db, 'stockRoom');
-    const unsubscribeStock = onSnapshot(stockRef, (snapshot) => {
-      const updated = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      const sorted = [...updated].sort((a, b) => a.quantity - b.quantity);
-      setStockItems(sorted);
+    const unsub = onSnapshot(collection(db, 'stockRoom'), snapshot => {
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setStockItems(data);
     });
-    unsubscribes.push(unsubscribeStock);
-
-    const requestListeners = tracks.map((trackId) => {
-      const requestRef = collection(db, 'tracks', trackId, 'shoppingList');
-      return onSnapshot(requestRef, (snapshot) => {
-        let pending = snapshot.docs
-          .map(doc => ({ ...doc.data(), id: doc.id, trackId }))
-          .filter(item => item.status === 'requested');
-        setShoppingRequests(prev => {
-          const allOther = prev.filter(i => i.trackId !== trackId);
-          return [...allOther, ...pending];
-        });
-      });
-    });
-
-    const fulfilledListeners = tracks.map((trackId) => {
-      const ref = collection(db, 'tracks', trackId, 'fulfilledRequests');
-      return onSnapshot(ref, (snapshot) => {
-        let fulfilled = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id, trackId }));
-        setFulfilledRequests(prev => {
-          const allOther = prev.filter(i => i.trackId !== trackId);
-          return [...allOther, ...fulfilled];
-        });
-      });
-    });
-
-    unsubscribes.push(...requestListeners, ...fulfilledListeners);
-
-    const fetchUserRole = async () => {
-      const auth = getAuth();
-      const user = auth.currentUser;
-      if (!user) return setLoading(false);
-
-      const ref = doc(db, 'users', user.uid);
-      const snap = await getDoc(ref);
-      const data = snap.exists() ? snap.data() : {};
-      setUserRole(data.role || 'employee');
-      setLoading(false);
-    };
-
-    fetchUserRole();
-
-    return () => {
-      unsubscribes.forEach(unsub => unsub());
-    };
+    return () => unsub();
   }, []);
 
-  const handleAddItem = async () => {
-    if (!newItemName || !newItemQty) return alert('Enter name and quantity');
-    const ref = doc(collection(db, 'stockRoom'));
-    await setDoc(ref, {
-      name: newItemName,
-      quantity: parseInt(newItemQty),
-      category: newItemCategory,
-      unit: 'units',
+  useEffect(() => {
+    const fetchTracks = async () => {
+      const querySnap = await getDocs(collection(db, 'tracks'));
+      const data = querySnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setTracks(data);
+    };
+    fetchTracks();
+  }, []);
+
+  const addItem = async () => {
+    if (!newItem || !newQty) return;
+    const itemRef = doc(db, 'stockRoom', newItem);
+    await setDoc(itemRef, {
+      name: newItem,
+      quantity: parseInt(newQty),
+      category: newCat,
       trackStock: {}
     });
-    setNewItemName('');
-    setNewItemQty('');
-    setNewItemCategory('uncategorized');
+    setNewItem('');
+    setNewQty('');
+    setNewCat('uncategorized');
   };
 
-  const handleTransfer = async (itemId, trackId) => {
-    const amount = prompt(`How many units to send to ${trackId}?`);
-    if (!amount || isNaN(amount)) return;
-
-    const ref = doc(db, 'stockRoom', itemId);
-    await updateDoc(ref, {
-      quantity: increment(-parseInt(amount)),
-      [`trackStock.${trackId}`]: increment(parseInt(amount))
+  const transferStock = async () => {
+    if (!transferItem || !transferTrack || !transferQty) return;
+    const itemRef = doc(db, 'stockRoom', transferItem);
+    await updateDoc(itemRef, {
+      [`trackStock.${transferTrack}`]: increment(parseInt(transferQty))
     });
+    setTransferItem('');
+    setTransferTrack('');
+    setTransferQty('');
   };
 
-  const fulfillRequest = async (item) => {
-    const itemId = item.name.toLowerCase().replace(/\s/g, '-');
-    const stockRef = doc(db, 'stockRoom', itemId);
-    const shoppingRef = doc(db, 'tracks', item.trackId, 'shoppingList', item.id);
-    const fulfilledRef = doc(db, 'tracks', item.trackId, 'fulfilledRequests', item.id);
-
-    await updateDoc(stockRef, {
-      quantity: increment(-parseInt(item.quantity)),
-      [`trackStock.${item.trackId}`]: increment(parseInt(item.quantity))
-    });
-
-    const now = new Date();
-
-    await setDoc(fulfilledRef, {
-      ...item,
-      status: 'fulfilled',
-      fulfilledAt: now
-    });
-
-    await setDoc(shoppingRef, { status: 'archived' }, { merge: true });
-
-    alert(`✅ Fulfilled ${item.name} for ${item.trackId}`);
+  const categoryColors = {
+    drinks: '#00c6ff',
+    spares: '#ff4e50',
+    cleaning: '#f9d423',
+    uncategorized: '#bdc3c7'
   };
-
-  if (loading) return <p style={{ color: '#fff', padding: 20 }}>Loading...</p>;
-  if (userRole !== 'owner' && userRole !== 'admin') {
-    return <p style={{ color: '#fff', padding: 20 }}>🚫 Access denied</p>;
-  }
-
-  const filteredItems =
-    selectedCategory === 'All'
-      ? stockItems
-      : stockItems.filter((item) => item.category === selectedCategory);
-
-  const uniqueCategories = [
-    'All',
-    ...new Set(stockItems.map(item => item.category || 'uncategorized')),
-  ];
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(to bottom right, #0f0f0f, #1a1a1a)',
-      padding: 20,
-      fontFamily: 'Helvetica, sans-serif',
-      color: '#fff'
-    }}>
-      <div style={{
-        background: 'rgba(255,255,255,0.05)',
-        border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: 16,
-        backdropFilter: 'blur(12px)',
-        padding: 24,
-        maxWidth: 1000,
-        margin: '0 auto'
-      }}>
-        <h2 style={{ fontSize: 28, fontWeight: 600, marginBottom: 20 }}>📦 Stock Control</h2>
+    <div className="dashboard">
+      <h2 className="dashboard-title">Stock Room</h2>
 
-        {/* Stock Cards */}
-        <div style={{ display: 'flex', overflowX: 'auto', gap: 12, marginBottom: 20, paddingBottom: 10 }}>
-          {stockItems.map((item) => (
-            <div key={item.id} style={{
-              background: '#2c2c2e', borderRadius: 12, padding: '10px 16px',
-              minWidth: 160, color: '#fff', boxShadow: '0 2px 4px rgba(0,0,0,0.4)', flexShrink: 0
-            }}>
-              <div style={{ fontSize: 18 }}>{getCategoryEmoji(item.category)} {item.name}</div>
-              <div style={{ fontSize: 14, color: '#aaa' }}>{item.quantity} units</div>
+      <div className="track-grid">
+        {['drinks', 'spares', 'cleaning', 'uncategorized'].map(cat => {
+          const catItems = stockItems.filter(i => i.category === cat);
+          const totalQty = catItems.reduce((sum, item) => sum + item.quantity, 0);
+          return (
+            <div key={cat} className="track-card">
+              <div className="track-title">{cat.toUpperCase()}</div>
+              <div className="track-subtitle">{totalQty} units</div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="form-section">
+        <div className="form-block">
+          <h3>Add New Stock</h3>
+          <input value={newItem} onChange={e => setNewItem(e.target.value)} placeholder="Item name" />
+          <input value={newQty} onChange={e => setNewQty(e.target.value)} placeholder="Qty" type="number" />
+          <select value={newCat} onChange={e => setNewCat(e.target.value)}>
+            <option value="uncategorized">Uncategorized</option>
+            <option value="drinks">Drinks</option>
+            <option value="spares">Spares</option>
+            <option value="cleaning">Cleaning</option>
+          </select>
+          <button onClick={addItem}>Add Item</button>
+        </div>
+
+        <div className="form-block">
+          <h3>Transfer Stock</h3>
+          <select value={transferItem} onChange={e => setTransferItem(e.target.value)}>
+            <option value="">Select Item</option>
+            {stockItems.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
+          </select>
+          <select value={transferTrack} onChange={e => setTransferTrack(e.target.value)}>
+            <option value="">Select Track</option>
+            {tracks.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
+          <input value={transferQty} onChange={e => setTransferQty(e.target.value)} placeholder="Qty" type="number" />
+          <button onClick={transferStock}>Transfer</button>
+        </div>
+      </div>
+
+      <div className="stock-list">
+        <h3>All Stock Items</h3>
+        <div className="stock-grid">
+          {stockItems.map(item => (
+            <div key={item.id} className="stock-glass-card">
+              <div className="stock-title-row">
+                <span className="stock-name">{item.name}</span>
+                <span className="stock-qty">{item.quantity} units</span>
+              </div>
+              <div className="stock-bar">
+                <div
+                  className="stock-fill"
+                  style={{ width: `${Math.min(item.quantity, 100)}%`, backgroundColor: categoryColors[item.category] || '#777' }}
+                ></div>
+              </div>
+              <div className="stock-cat">{item.category}</div>
             </div>
           ))}
         </div>
-
-        {/* Add Stock */}
-        <div style={{
-          background: '#1c1c1e', padding: 20, borderRadius: 14,
-          marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.4)'
-        }}>
-          <h3 style={{ marginBottom: 10 }}>➕ Add New Stock</h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-            <input placeholder="Item name" value={newItemName} onChange={e => setNewItemName(e.target.value)} style={{ padding: 10, flex: 1 }} />
-            <input placeholder="Qty" value={newItemQty} onChange={e => setNewItemQty(e.target.value)} type="number" style={{ padding: 10, width: 100 }} />
-            <select value={newItemCategory} onChange={e => setNewItemCategory(e.target.value)} style={{ padding: 10 }}>
-              <option value="drinks">Drinks</option>
-              <option value="spares">Spares</option>
-              <option value="cleaning">Cleaning</option>
-              <option value="uncategorized">Uncategorized</option>
-            </select>
-            <button onClick={handleAddItem} style={{ padding: '10px 20px', background: '#34c759', color: '#fff', border: 'none', borderRadius: 8 }}>Add</button>
-          </div>
-        </div>
-
-        {/* Category Filter */}
-        <div style={{ marginBottom: 20 }}>
-          <label>Filter by category: </label>
-          <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)} style={{ padding: 8 }}>
-            {uniqueCategories.map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Stock List */}
-        {filteredItems.map(item => (
-          <div key={item.id} style={{
-            background: '#1c1c1e', padding: 15, borderRadius: 12,
-            marginBottom: 12, boxShadow: '0 1px 2px rgba(0,0,0,0.3)'
-          }}>
-            <strong>{item.name}</strong> — {item.quantity} units ({item.category})
-            <div style={{ fontSize: 12, marginTop: 6, color: '#ccc' }}>Track stock:</div>
-            {tracks.map(trackId => (
-              <div key={trackId} style={{ marginLeft: 10 }}>
-                {trackId}: {item.trackStock?.[trackId] || 0}
-                <button
-                  onClick={() => handleTransfer(item.id, trackId)}
-                  style={{ marginLeft: 8, fontSize: 12, padding: '2px 8px', borderRadius: 6, border: 'none', background: '#0a84ff', color: '#fff' }}
-                >
-                  Transfer
-                </button>
-              </div>
-            ))}
-          </div>
-        ))}
-
-        <hr style={{ margin: '40px 0', borderColor: '#444' }} />
-        <h3 style={{ marginBottom: 12 }}>🛒 Pending Requests</h3>
-        {shoppingRequests.length === 0 && <p>No pending requests.</p>}
-        {shoppingRequests.map(item => (
-          <div key={item.id} style={{
-            background: '#2c2c2e', padding: 15, borderRadius: 10, marginBottom: 10
-          }}>
-            <strong>{item.name}</strong> — Qty: {item.quantity}
-            <div style={{ fontSize: 13, color: '#aaa' }}>Track: {item.trackId}</div>
-            <button
-              onClick={() => fulfillRequest(item)}
-              style={{ marginTop: 8, padding: '6px 16px', background: '#30d158', color: '#000', border: 'none', borderRadius: 8 }}
-            >
-              ✅ Fulfill
-            </button>
-          </div>
-        ))}
-
-        <hr style={{ margin: '40px 0', borderColor: '#444' }} />
-        <h3 style={{ marginBottom: 12 }}>✅ Fulfilled Requests</h3>
-        {fulfilledRequests.length === 0 && <p>No fulfilled requests yet.</p>}
-        {fulfilledRequests.map(item => (
-          <div key={item.id} style={{
-            background: '#1c1c1e', padding: 15, borderRadius: 10, marginBottom: 10
-          }}>
-            <strong>{item.name}</strong> — Qty: {item.quantity}
-            <div style={{ fontSize: 13, color: '#aaa' }}>Track: {item.trackId}</div>
-            <div style={{ fontSize: 12, color: '#666' }}>Fulfilled: {formatDate(item.fulfilledAt)}</div>
-          </div>
-        ))}
       </div>
     </div>
   );
