@@ -4,7 +4,44 @@ Track Tycoon is a web + mobile app built for managing daily operations, staff, a
 It features real-time task tracking, stock control, and role-based dashboards for employees and owners.
 
 ---
+🛠 Track Tycoon – Stock Room Feature Update (Aug 2, 2025)
+✅ New Features Added Today
+📦 Revamped StockRoomPage UI
 
+Glassmorphic dashboard-style layout
+
+Category summary cards (Drinks, Spares, Cleaning, Uncategorized)
+
+Responsive grid layout for stock items (3 per row)
+
+Live progress bars showing stock quantities
+
+Category-colored bars (clean and minimal)
+
+➕ Add Stock Form
+
+Add new stock items with name, quantity, category
+
+Auto-syncs to Firestore
+
+🔁 Transfer Stock Form
+
+Select stock item
+
+Choose destination track
+
+Transfer quantity directly to track inventory
+
+📥 CSV Stock Importer (already implemented earlier)
+
+Import bulk stock from CSV via StockImportPage.js
+
+📊 UI Design
+Matched Apple-style dark theme with glassmorphic panels
+
+Fully responsive design with modern layout
+
+Clean, intuitive structure consistent with TrackDashboard
 ## 🚀 Live Features (As of Latest Commit)
 
 ### ✅ Authentication
