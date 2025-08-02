@@ -8,8 +8,13 @@ import {
   setDoc,
   updateDoc,
   getDocs,
-  increment
+  increment,
+  serverTimestamp,
+  addDoc,
+  query,
+  orderBy
 } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 import './StockRoomPage.css';
 
 const StockRoomPage = () => {
@@ -21,6 +26,8 @@ const StockRoomPage = () => {
   const [transferItem, setTransferItem] = useState('');
   const [transferTrack, setTransferTrack] = useState('');
   const [transferQty, setTransferQty] = useState('');
+  const [shoppingRequests, setShoppingRequests] = useState([]);
+  const [transferLogs, setTransferLogs] = useState([]);
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'stockRoom'), snapshot => {
@@ -37,6 +44,41 @@ const StockRoomPage = () => {
       setTracks(data);
     };
     fetchTracks();
+  }, []);
+
+  useEffect(() => {
+    const q = collection(db, 'tracks');
+
+    const unsub = onSnapshot(q, async (snapshot) => {
+      const allRequests = [];
+
+      for (const docSnap of snapshot.docs) {
+        const trackId = docSnap.id;
+        const listSnap = await getDocs(collection(db, 'tracks', trackId, 'shoppingList'));
+
+        listSnap.forEach(item => {
+          allRequests.push({
+            id: item.id,
+            trackId,
+            ...item.data()
+          });
+        });
+      }
+
+      setShoppingRequests(allRequests);
+    });
+
+    return () => unsub();
+  }, []);
+
+  // ✅ NEW: Fetch transfer logs
+  useEffect(() => {
+    const q = query(collection(db, 'transfers'), orderBy('timestamp', 'desc'));
+    const unsub = onSnapshot(q, (snapshot) => {
+      const logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setTransferLogs(logs);
+    });
+    return () => unsub();
   }, []);
 
   const addItem = async () => {
@@ -62,6 +104,47 @@ const StockRoomPage = () => {
     setTransferItem('');
     setTransferTrack('');
     setTransferQty('');
+  };
+
+  const handleTransferRequest = async (item) => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    const userName = user?.displayName || user?.email || 'Unknown';
+
+    const stockRef = doc(db, 'stockRoom', item.name);
+    const trackRef = doc(db, 'tracks', item.trackId);
+
+    try {
+      await updateDoc(stockRef, {
+        quantity: increment(-item.quantity)
+      });
+
+      await updateDoc(trackRef, {
+        [`trackStock.${item.name}`]: increment(item.quantity)
+      });
+
+      const reqRef = doc(db, 'tracks', item.trackId, 'shoppingList', item.id);
+      await setDoc(reqRef, {
+        ...item,
+        status: 'fulfilled',
+        fulfilledAt: new Date()
+      });
+
+      await addDoc(collection(db, 'transfers'), {
+        item: item.name,
+        quantity: item.quantity,
+        from: 'StockRoom',
+        to: item.trackId,
+        trackId: item.trackId,
+        by: userName,
+        timestamp: serverTimestamp(),
+      });
+
+      alert(`Transferred ${item.quantity} ${item.name} to ${item.trackId}`);
+    } catch (err) {
+      console.error('Transfer failed:', err);
+      alert('Transfer failed');
+    }
   };
 
   const categoryColors = {
@@ -133,6 +216,39 @@ const StockRoomPage = () => {
                 ></div>
               </div>
               <div className="stock-cat">{item.category}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="shopping-request-section">
+        <h3>Pending Shopping Requests</h3>
+        <div className="shopping-request-grid">
+          {shoppingRequests.map(item => (
+            <div key={item.id} className="stock-glass-card">
+              <div className="stock-title-row">
+                <span className="stock-name">{item.name}</span>
+                <span className="stock-qty">{item.quantity} requested</span>
+              </div>
+              <div className="stock-cat">Track: {item.trackId}</div>
+              <button onClick={() => handleTransferRequest(item)}>Transfer</button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ✅ NEW: Transfer Logs */}
+      <div className="transfer-log-section">
+        <h3>Transfer Logs</h3>
+        <div className="transfer-log-grid">
+          {transferLogs.map(log => (
+            <div key={log.id} className="stock-glass-card">
+              <div><strong>{log.item}</strong> → {log.to}</div>
+              <div>Qty: {log.quantity}</div>
+              <div>By: {log.by}</div>
+              <div style={{ fontSize: '0.8em', color: '#bbb' }}>
+                {log.timestamp?.toDate?.().toLocaleString() || 'Pending'}
+              </div>
             </div>
           ))}
         </div>

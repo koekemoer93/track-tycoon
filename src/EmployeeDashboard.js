@@ -1,7 +1,12 @@
-// src/EmployeeDashboard.js
 import React, { useEffect, useState } from 'react';
 import { getAuth } from 'firebase/auth';
-import { doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
+import {
+  doc,
+  getDoc,
+  setDoc,
+  collection,
+  getDocs,
+} from 'firebase/firestore';
 import { db } from './firebase';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -9,7 +14,6 @@ import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import MissionCard from './components/MissionCard';
-
 
 const EmployeeDashboard = () => {
   const [userInfo, setUserInfo] = useState(null);
@@ -39,29 +43,37 @@ const EmployeeDashboard = () => {
 
   useEffect(() => {
     const fetchChecklist = async () => {
-      if (!userInfo?.role) return;
+      if (!userInfo?.role || !userInfo?.assignedTrack) return;
 
       const today = format(new Date(), 'EEEE');
-      const templateRef = doc(db, 'templates', userInfo.role.toLowerCase());
+      const templateRef = doc(
+        db,
+        'tracks',
+        userInfo.assignedTrack,
+        'templates',
+        userInfo.role.toLowerCase()
+      );
       const docSnap = await getDoc(templateRef);
 
       if (docSnap.exists()) {
         const data = docSnap.data();
         let tasksForToday = [];
 
-Object.entries(data).forEach(([day, tasks]) => {
-  tasks.forEach(task => {
-    const isToday = day === today;
-    const isRecurring =
-      (task.recurrence === 'daily') ||
-      (task.recurrence === 'weekly' && day === today) ||
-      (task.recurrence === 'monthly' && new Date().getDate() <= 7 && day === today); // run monthly tasks in first week
+        Object.entries(data).forEach(([day, tasks]) => {
+          tasks.forEach((task) => {
+            const isToday = day === today;
+            const isRecurring =
+              task.recurrence === 'daily' ||
+              (task.recurrence === 'weekly' && day === today) ||
+              (task.recurrence === 'monthly' &&
+                new Date().getDate() <= 7 &&
+                day === today);
 
-    if (isToday || isRecurring) {
-      tasksForToday.push(task);
-    }
-  });
-});
+            if (isToday || isRecurring) {
+              tasksForToday.push(task);
+            }
+          });
+        });
 
         setChecklist(tasksForToday);
 
@@ -71,13 +83,20 @@ Object.entries(data).forEach(([day, tasks]) => {
         const progressRef = collection(db, 'users', user.uid, 'taskProgress');
         const snapshot = await getDocs(progressRef);
         const imageMap = {};
-        snapshot.forEach(docSnap => {
+        const checkMap = {};
+
+        snapshot.forEach((docSnap) => {
           const data = docSnap.data();
           if (data.imageUrl) {
             imageMap[docSnap.id] = data.imageUrl;
           }
+          if (data.done) {
+            checkMap[docSnap.id] = true;
+          }
         });
+
         setImageUrls(imageMap);
+        setChecked(checkMap);
       } else {
         setChecklist([]);
       }
@@ -93,10 +112,14 @@ Object.entries(data).forEach(([day, tasks]) => {
     const auth = getAuth();
     const user = auth.currentUser;
     const ref = doc(db, 'users', user.uid, 'taskProgress', taskId);
-    await setDoc(ref, {
-      done: newState[taskId],
-      updatedAt: new Date(),
-    }, { merge: true });
+    await setDoc(
+      ref,
+      {
+        done: newState[taskId],
+        updatedAt: new Date(),
+      },
+      { merge: true }
+    );
   };
 
   const handleImageUpload = async (taskId, file) => {
@@ -111,49 +134,57 @@ Object.entries(data).forEach(([day, tasks]) => {
     const downloadURL = await getDownloadURL(storageRef);
 
     const refDoc = doc(db, 'users', user.uid, 'taskProgress', taskId);
-    await setDoc(refDoc, {
-      imageUrl: downloadURL,
-      updatedAt: new Date(),
-    }, { merge: true });
+    await setDoc(
+      refDoc,
+      {
+        imageUrl: downloadURL,
+        updatedAt: new Date(),
+      },
+      { merge: true }
+    );
 
-    setImageUrls(prev => ({ ...prev, [taskId]: downloadURL }));
+    setImageUrls((prev) => ({ ...prev, [taskId]: downloadURL }));
   };
 
   if (!userInfo) {
     return <p style={{ color: '#fff', padding: 20 }}>Loading dashboard...</p>;
   }
 
-  const checkedCount = checklist.filter(task => checked[task.id]).length;
-  const progress = checklist.length > 0
-    ? Math.round((checkedCount / checklist.length) * 100)
-    : 0;
+  const checkedCount = checklist.filter((task) => checked[task.id]).length;
+  const progress =
+    checklist.length > 0
+      ? Math.round((checkedCount / checklist.length) * 100)
+      : 0;
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(to bottom right, #0f0f0f, #1a1a1a)',
-      padding: 20,
-      fontFamily: 'Helvetica, sans-serif',
-      color: '#fff',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'flex-start'
-    }}>
-      <div style={{
-        background: 'rgba(255, 255, 255, 0.05)',
-        backdropFilter: 'blur(12px)',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        borderRadius: 16,
-        padding: 24,
-        width: '100%',
-        maxWidth: 700,
-        boxShadow: '0 0 20px rgba(0,0,0,0.3)'
-      }}>
-        
-       <MissionCard
-        userName={userInfo.name}
-        progress={progress}
-        taskCount={checklist.length}
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(to bottom right, #0f0f0f, #1a1a1a)',
+        padding: 20,
+        fontFamily: 'Helvetica, sans-serif',
+        color: '#fff',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+      }}
+    >
+      <div
+        style={{
+          background: 'rgba(255, 255, 255, 0.05)',
+          backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: 16,
+          padding: 24,
+          width: '100%',
+          maxWidth: 700,
+          boxShadow: '0 0 20px rgba(0,0,0,0.3)',
+        }}
+      >
+        <MissionCard
+          userName={userInfo.name}
+          progress={progress}
+          taskCount={checklist.length}
         />
 
         <h2>👷 Employee Dashboard</h2>
@@ -184,7 +215,7 @@ Object.entries(data).forEach(([day, tasks]) => {
             border: '1px solid #555',
             borderRadius: 8,
             color: '#fff',
-            cursor: 'pointer'
+            cursor: 'pointer',
           }}
         >
           📅 View Task History
@@ -208,7 +239,9 @@ Object.entries(data).forEach(([day, tasks]) => {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => handleImageUpload(task.id, e.target.files[0])}
+                  onChange={(e) =>
+                    handleImageUpload(task.id, e.target.files[0])
+                  }
                 />
                 {imageUrls[task.id] && (
                   <img
@@ -221,7 +254,9 @@ Object.entries(data).forEach(([day, tasks]) => {
             ))}
           </ul>
         ) : (
-          <p style={{ color: '#bbb', fontStyle: 'italic' }}>No tasks scheduled for today.</p>
+          <p style={{ color: '#bbb', fontStyle: 'italic' }}>
+            No tasks scheduled for today.
+          </p>
         )}
       </div>
     </div>
