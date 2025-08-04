@@ -1,41 +1,90 @@
-// src/TrackDashboard.js
 import AnalyticsCards from './components/AnalyticsCards';
 import React, { useEffect, useState } from 'react';
 import './TrackDashboard.css';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
 import { useNavigate } from 'react-router-dom';
+
+const isTrackOpen = (trackName) => {
+  const now = new Date();
+  const currentDay = now.getDay(); // 0 (Sun) – 6 (Sat)
+  const currentHour = now.getHours();
+
+  const isWithinHours = (start, end) => currentHour >= start && currentHour < end;
+
+  if (trackName.includes('Indykart')) {
+    if (currentDay === 1) return isWithinHours(11, 18);
+    if (currentDay === 0 || currentDay === 6) return isWithinHours(11, 18);
+    return isWithinHours(11, 20);
+  }
+
+  if (trackName.includes('Midlands')) {
+    if (currentDay === 3) return false;
+    return isWithinHours(9, 17);
+  }
+
+  if (trackName.includes('Syringa')) {
+    if (currentDay === 1) return false;
+    if (currentDay >= 2 && currentDay <= 4) return isWithinHours(11, 17);
+    if (currentDay === 5) return isWithinHours(11, 19);
+    if (currentDay === 6) return isWithinHours(9, 20);
+    if (currentDay === 0) return isWithinHours(9, 18);
+  }
+
+  if (trackName.includes('Pavilion')) {
+    if (currentDay === 1) return isWithinHours(10, 18);
+    if (currentDay >= 2 && currentDay <= 5) return isWithinHours(10, 19);
+    if (currentDay === 6) return isWithinHours(9, 20);
+    if (currentDay === 0) return isWithinHours(9, 18);
+  }
+
+  if (trackName.includes('RBEK') || trackName.includes('Rosebank')) {
+    if (currentDay === 1) return isWithinHours(11, 18);
+    if (currentDay >= 2 && currentDay <= 4) return isWithinHours(11, 20);
+    if (currentDay === 5 || currentDay === 6) return isWithinHours(11, 21);
+    if (currentDay === 0) return isWithinHours(11, 18);
+  }
+
+  return false;
+};
 
 const TrackDashboard = () => {
   const [tracks, setTracks] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchTracks = async () => {
-      try {
-        const trackCollection = collection(db, 'tracks');
-        const snapshot = await getDocs(trackCollection);
-        const data = snapshot.docs.map(doc => {
-          const d = doc.data();
-          const completion = d.totalTasks > 0
-            ? Math.round((d.completedTasks / d.totalTasks) * 100)
-            : 0;
+    const fetchTracks = (snapshot) => {
+      const data = snapshot.docs.map(doc => {
+        const d = doc.data();
+        const completion = d.totalTasks > 0
+          ? Math.round((d.completedTasks / d.totalTasks) * 100)
+          : 0;
 
-          return {
-            id: doc.id,
-            name: d.name,
-            completion,
-            lastUpdated: 'Today 14:30',
-          };
-        });
+        const status = isTrackOpen(d.name) ? 'open' : 'closed';
 
-        setTracks(data);
-      } catch (err) {
-        console.error('Error fetching tracks:', err);
-      }
+        return {
+          id: doc.id,
+          name: d.name,
+          status,
+          completion,
+          lastUpdated: 'Today 14:30',
+        };
+      });
+
+      setTracks(data);
     };
 
-    fetchTracks();
+    const trackRef = collection(db, 'tracks');
+    const unsubscribe = onSnapshot(trackRef, fetchTracks);
+
+    const interval = setInterval(() => {
+      onSnapshot(trackRef, fetchTracks);
+    }, 60000);
+
+    return () => {
+      unsubscribe();
+      clearInterval(interval);
+    };
   }, []);
 
   return (
@@ -65,6 +114,19 @@ const TrackDashboard = () => {
             className="track-card"
             onClick={() => navigate(`/track/${track.id}`)}
           >
+            <div style={{
+              marginTop: 10,
+              padding: '4px 10px',
+              borderRadius: '20px',
+              fontWeight: 'bold',
+              color: 'white',
+              backgroundColor: track.status === 'open' ? 'green' : 'red',
+              display: 'inline-block',
+              fontSize: 12
+            }}>
+              {track.status === 'open' ? 'Open' : 'Closed'}
+            </div>
+
             <div className="track-info">
               <h2>{track.name}</h2>
               <p className="label">Completion</p>
@@ -80,7 +142,6 @@ const TrackDashboard = () => {
           </div>
         ))}
 
-        {/* Store Room Card */}
         <div
           className="track-card"
           onClick={() => navigate('/stockroom')}

@@ -1,5 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+// Import the global theme variables and base styles first.  The theme
+// should be loaded before the main index.css so its variables and
+// base rules are available for use throughout the app.
+import './theme.css';
 import './index.css';
 import App from './App';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
