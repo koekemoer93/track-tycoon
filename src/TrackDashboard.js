@@ -5,14 +5,12 @@ import './TrackDashboard.css';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from './firebase';
 import { useNavigate } from 'react-router-dom';
+import AddEmployeeForm from './components/AddEmployeeForm';
 
 const TrackDashboard = () => {
   const [tracks, setTracks] = useState([]);
   const navigate = useNavigate();
-
-  // Track number of pending leave requests to show a badge for owners/managers
   const [pendingLeave, setPendingLeave] = useState(0);
-  
 
   const getOpeningHours = (trackName) => {
     const name = trackName.toLowerCase();
@@ -66,7 +64,6 @@ const TrackDashboard = () => {
       }[day] || [0, 0];
     }
 
-    // Rosebank Electric Karting (RBEK) – handle both 'rbek' acronym and 'rosebank' full name
     if (name.includes('rbek') || name.includes('rosebank')) {
       return {
         0: [11, 18],
@@ -79,7 +76,6 @@ const TrackDashboard = () => {
       }[day] || [0, 0];
     }
 
-    // Default: always open
     return [0, 24];
   };
 
@@ -114,9 +110,7 @@ const TrackDashboard = () => {
     return () => unsubscribe();
   }, []);
 
-  // Listen for pending leave requests if the user is an admin. This effect runs once on mount.
   useEffect(() => {
-    // Determine if user is admin by checking local auth and Firestore roles
     let unsubscribeLeaves = null;
     const checkAdminAndSubscribe = async () => {
       const { getAuth } = await import('firebase/auth');
@@ -151,7 +145,6 @@ const TrackDashboard = () => {
           })}
         </p>
         <h1>Track Tycoon Summary</h1>
-        {/* Pending leave badge shown only to admins/managers */}
         {pendingLeave > 0 && (
           <div
             style={{
@@ -183,7 +176,6 @@ const TrackDashboard = () => {
             className="track-card"
             onClick={() => navigate(`/track/${track.id}`)}
           >
-            {/* Status Badge */}
             <div style={{
               marginTop: 10,
               padding: '4px 10px',
@@ -212,7 +204,6 @@ const TrackDashboard = () => {
           </div>
         ))}
 
-        {/* Store Room Card */}
         <div
           className="track-card"
           onClick={() => navigate('/stockroom')}
@@ -223,6 +214,20 @@ const TrackDashboard = () => {
             <p className="timestamp">—</p>
           </div>
         </div>
+ <div style={{
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  marginTop: '60px',
+  marginBottom: '80px',
+  width: '100%',
+}}>
+  <div style={{ maxWidth: '400px', width: '100%' }}>
+    <AddEmployeeForm />
+  </div>
+</div>
+
+
       </div>
     </div>
   );

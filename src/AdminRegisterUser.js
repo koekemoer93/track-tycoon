@@ -74,66 +74,114 @@ const AdminRegisterUser = () => {
   };
 
   return (
-    <div style={{ padding: 40, color: '#fff' }}>
-      <h2>🛠 Register New User (Admin Only)</h2>
-      <form onSubmit={handleRegister}>
-        <input
-          name="name"
-          placeholder="Full Name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-          style={{ marginBottom: 10, display: 'block' }}
-        />
-        <input
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-          type="email"
-          style={{ marginBottom: 10, display: 'block' }}
-        />
-        <input
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-          type="password"
-          style={{ marginBottom: 10, display: 'block' }}
-        />
-
-        <label>Role:</label>
-        <select name="role" value={formData.role} onChange={handleChange} style={{ marginBottom: 10, display: 'block' }}>
-          {roles.map((r) => (
-            <option key={r} value={r}>{r}</option>
-          ))}
-        </select>
-
-        <label>Assigned Track:</label>
-        <select name="assignedTrack" value={formData.assignedTrack} onChange={handleChange} style={{ marginBottom: 10, display: 'block' }}>
-          {tracks.map((t) => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </select>
-
-        <label>
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(to bottom right, #0f0f0f, #1a1a1a)',
+      padding: 20,
+      fontFamily: 'Helvetica, sans-serif',
+      color: '#fff',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'flex-start'
+    }}>
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.05)',
+        backdropFilter: 'blur(12px)',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        borderRadius: 16,
+        padding: 30,
+        width: '100%',
+        maxWidth: 600,
+        boxShadow: '0 0 20px rgba(0,0,0,0.3)'
+      }}>
+        <h2 style={{ marginBottom: 20 }}>👤 Register New Employee</h2>
+        <form onSubmit={handleRegister}>
+          <label>Full Name</label>
           <input
-            type="checkbox"
-            name="isAdmin"
-            checked={formData.isAdmin}
+            name="name"
+            placeholder="Full Name"
+            value={formData.name}
             onChange={handleChange}
+            required
+            style={inputStyle}
           />
-          Admin Access?
-        </label>
 
-        <br /><br />
-        <button type="submit">Register User</button>
-      </form>
-      <p>{status}</p>
+          <label>Email</label>
+          <input
+            name="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            type="email"
+            style={inputStyle}
+          />
+
+          <label>Password</label>
+          <input
+            name="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            type="password"
+            style={inputStyle}
+          />
+
+          <label>Role</label>
+          <select name="role" value={formData.role} onChange={handleChange} style={inputStyle}>
+            {roles.map((r) => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
+
+          <label>Assigned Track</label>
+          <select name="assignedTrack" value={formData.assignedTrack} onChange={handleChange} style={inputStyle}>
+            {tracks.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+
+          <label style={{ marginBottom: 10 }}>
+            <input
+              type="checkbox"
+              name="isAdmin"
+              checked={formData.isAdmin}
+              onChange={handleChange}
+              style={{ marginRight: 8 }}
+            />
+            Grant Admin Access
+          </label>
+
+          <br /><br />
+          <button type="submit" style={buttonStyle}>➕ Register</button>
+        </form>
+        <p style={{ marginTop: 20 }}>{status}</p>
+      </div>
     </div>
   );
+};
+
+const inputStyle = {
+  display: 'block',
+  width: '100%',
+  padding: '10px',
+  marginBottom: '15px',
+  backgroundColor: '#111',
+  border: '1px solid #444',
+  borderRadius: '8px',
+  color: '#fff',
+  fontSize: '14px',
+};
+
+const buttonStyle = {
+  padding: '10px 20px',
+  backgroundColor: '#00ff88',
+  color: '#000',
+  border: 'none',
+  borderRadius: '8px',
+  cursor: 'pointer',
+  fontWeight: 'bold',
 };
 
 export default AdminRegisterUser;
