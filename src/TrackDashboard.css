@@ -27,6 +27,7 @@ body {
   padding: 20px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.4);
   transition: transform 0.2s ease;
+  position: relative;
 }
 
 .track-card:hover {

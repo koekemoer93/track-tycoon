@@ -14,6 +14,9 @@ import UploadPage from './UploadPage';
 import AdminRegisterUser from './AdminRegisterUser';
 import ProtectedRoute from './components/ProtectedRoute';
 import TaskHistory from './TaskHistory';
+// Import leave system pages
+import LeaveRequestPage from './LeaveRequestPage';
+import LeaveTrackerPage from './LeaveTrackerPage';
 
 function App() {
   return (
@@ -57,6 +60,27 @@ function App() {
         <Route path="/track/:trackId" element={<TrackPage />} />
         <Route path="/admin-panel" element={<UserAdminPage />} />
         <Route path="/track-dashboard" element={<TrackDashboard />} />
+
+        {/* Leave system routes */}
+        {/* Employee leave request page. This route is protected so only logged in users can request leave. */}
+        <Route
+          path="/leave"
+          element={
+            <ProtectedRoute>
+              <LeaveRequestPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Admin leave tracker page. Only owners/managers can access. */}
+        <Route
+          path="/leave-tracker"
+          element={
+            <ProtectedRoute requireAdmin={true}>
+              <LeaveTrackerPage />
+            </ProtectedRoute>
+          }
+        />
 
       </Routes>
         {/*

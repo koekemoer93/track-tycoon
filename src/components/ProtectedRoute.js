@@ -29,8 +29,14 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
       }
 
       const userData = userSnap.data();
-      if (requireAdmin && !userData.isAdmin) {
-        setUser(null);
+      if (requireAdmin) {
+        // Treat owners, managers or explicit admin flag as administrators
+        const isAdmin = userData?.isAdmin || userData?.role === 'owner' || userData?.role === 'manager';
+        if (!isAdmin) {
+          setUser(null);
+        } else {
+          setUser(currentUser);
+        }
       } else {
         setUser(currentUser);
       }

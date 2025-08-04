@@ -3,17 +3,26 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 
 // TopNav dynamically shows tabs based on the logged‑in user's role.
 const TopNav = () => {
   const [tabs, setTabs] = useState([]);
+  // Number of pending leave requests (for admin users)
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     const auth = getAuth();
     // Listen for authentication state changes so we can update the nav when users log in/out
+    let unsubscribeLeaves = null;
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      // Reset pending count when user changes
+      setPendingCount(0);
+      if (unsubscribeLeaves) {
+        unsubscribeLeaves();
+        unsubscribeLeaves = null;
+      }
       if (!user) {
         // When not logged in, there are no navigation buttons
         setTabs([]);
@@ -30,12 +39,28 @@ const TopNav = () => {
           { path: '/track-dashboard', label: '🏠 Dashboard' },
           { path: '/employee-dashboard', label: '🧑‍🔧 Employee' },
           { path: '/stockroom', label: '📦 Stock Room' },
+          { path: '/leave-tracker', label: '⛱️ Leave' },
         ]);
+        // Listen for pending leave requests to display a badge
+        const pendingQuery = query(
+          collection(db, 'leaveRequests'),
+          where('status', '==', 'pending')
+        );
+        unsubscribeLeaves = onSnapshot(pendingQuery, (snapshot) => {
+          setPendingCount(snapshot.size);
+        });
       } else {
-        setTabs([{ path: '/employee-dashboard', label: '🧑‍🔧 Employee' }]);
+        // Non-admins get employee dashboard and leave request page
+        setTabs([
+          { path: '/employee-dashboard', label: '🧑‍🔧 Employee' },
+          { path: '/leave', label: '⛱️ Leave' },
+        ]);
       }
     });
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+      if (unsubscribeLeaves) unsubscribeLeaves();
+    };
   }, []);
 
   // If there are no tabs (e.g. on the login page) render nothing
@@ -67,7 +92,10 @@ const TopNav = () => {
             transition: '0.2s ease',
           })}
         >
-          {tab.label}
+          {/* Append pending count for the leave tracker tab */}
+          {tab.path === '/leave-tracker' && pendingCount > 0
+            ? `${tab.label} (${pendingCount})`
+            : tab.label}
         </NavLink>
       ))}
 
