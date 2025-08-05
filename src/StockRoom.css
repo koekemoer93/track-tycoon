@@ -1,0 +1,65 @@
+.stock-room {
+  padding: 40px;
+  background-color: #f0f4f8;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+}
+
+.stock-room h1 {
+  text-align: center;
+  font-size: 32px;
+  margin-bottom: 30px;
+}
+
+.stock-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.stock-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+  transition: transform 0.2s ease;
+}
+
+.stock-card:hover {
+  transform: translateY(-5px);
+}
+
+.stock-card h2 {
+  font-size: 20px;
+  color: #2d3436;
+}
+
+.stock-card p {
+  font-size: 15px;
+  color: #555;
+  margin-top: 8px;
+}
+
+.low-stock {
+  border-left: 6px solid #d63031;
+}
+
+.warning {
+  color: #d63031;
+  font-weight: bold;
+}
+
+.back-button {
+  margin-bottom: 20px;
+  background-color: transparent;
+  border: none;
+  color: #00b894;
+  font-size: 16px;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+}
+
+.back-button:hover {
+  text-decoration: underline;
+}

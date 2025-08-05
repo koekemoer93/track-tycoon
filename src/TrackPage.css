@@ -1,0 +1,84 @@
+.track-page {
+  padding: 40px;
+  background-color: #f0f4f8;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  justify-content: center;
+}
+
+.track-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px;
+  width: 100%;
+  max-width: 600px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+}
+
+.track-title {
+  font-size: 28px;
+  color: #00b894;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.role-label {
+  font-size: 18px;
+  color: #2d3436;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.progress-wrapper {
+  width: 120px;
+  margin: 0 auto 30px auto;
+}
+
+.task-title {
+  font-size: 20px;
+  margin-bottom: 20px;
+  color: #2d3436;
+  text-align: center;
+}
+
+.checklist {
+  list-style: none;
+  padding: 0;
+}
+
+.checklist li {
+  margin-bottom: 14px;
+  font-size: 17px;
+  color: #2d3436;
+  display: flex;
+  align-items: center;
+}
+
+.checklist input[type='checkbox'] {
+  margin-right: 12px;
+  transform: scale(1.2);
+  accent-color: #00b894;
+}
+
+.recurrence-tag {
+  font-size: 13px;
+  color: #636e72;
+  margin-left: 8px;
+}
+
+.back-button {
+  margin-bottom: 20px;
+  background-color: transparent;
+  border: none;
+  color: #00b894;
+  font-size: 16px;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+}
+
+.back-button:hover {
+  text-decoration: underline;
+}
+

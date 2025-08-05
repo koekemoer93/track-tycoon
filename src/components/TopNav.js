@@ -31,10 +31,9 @@ const TopNav = () => {
 
       if (isAdmin) {
         setTabs([
-          { path: '/track-dashboard', label: '🏠 Dashboard' },
-          { path: '/employee-dashboard', label: '🧑‍🔧 Employee' },
+          { path: '/dashboard', label: '🏠 Dashboard' },
           { path: '/stockroom', label: '📦 Stock Room' },
-          { path: '/leave-tracker', label: '⛱️ Leave' },
+          { path: '/leave-tracker', label: '📩 Leave' },
         ]);
 
         const pendingQuery = query(
@@ -46,9 +45,9 @@ const TopNav = () => {
         });
       } else {
         setTabs([
-          { path: '/employee-dashboard', label: '🧑‍🔧 Employee' },
-          { path: '/clock-in', label: '🕒 Clock' },
-          { path: '/leave', label: '⛱️ Leave' },
+          { path: '/dashboard', label: 'Employee' },
+          { path: '/clock-in', label: 'Clock' },
+          { path: '/leave', label: 'Leave' },
         ]);
       }
     });
@@ -66,11 +65,13 @@ const TopNav = () => {
       className="top-nav"
       style={{
         display: 'flex',
-        background: '#111',
+        alignItems: 'center',
         padding: '12px 20px',
-        gap: 15,
-        borderBottom: '1px solid rgba(255,255,255,0.1)',
-        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.4)',
+        background: 'rgba(0,0,0,0.7)',
+        backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.4)',
+        zIndex: 1000,
       }}
     >
       {tabs.map((tab) => (
@@ -78,13 +79,14 @@ const TopNav = () => {
           key={tab.path}
           to={tab.path}
           style={({ isActive }) => ({
-            color: isActive ? '#fff' : '#bbb',
-            fontWeight: isActive ? 'bold' : 'normal',
+            color: isActive ? '#fff' : '#aaa',
+            fontWeight: isActive ? '600' : 'normal',
             textDecoration: 'none',
+            marginRight: 20,
             padding: '6px 12px',
             borderRadius: 8,
-            background: isActive ? 'rgba(255, 165, 0, 0.2)' : 'transparent',
-            transition: '0.2s ease',
+            background: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
+            transition: 'all 0.2s ease',
           })}
         >
           {tab.path === '/leave-tracker' && pendingCount > 0
@@ -100,14 +102,15 @@ const TopNav = () => {
         }}
         style={{
           marginLeft: 'auto',
-          background: 'rgba(255,165,0,0.2)',
+          background: 'rgba(255,255,255,0.1)',
           color: 'white',
           border: 'none',
           padding: '6px 14px',
           borderRadius: '12px',
           fontWeight: 'bold',
           cursor: 'pointer',
-          backdropFilter: 'blur(8px)',
+          backdropFilter: 'blur(6px)',
+          transition: 'all 0.2s ease',
         }}
       >
         Logout

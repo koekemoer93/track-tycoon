@@ -1,0 +1,47 @@
+.owner-dashboard {
+  padding: 30px;
+  font-family: sans-serif;
+}
+
+.overall-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.progress-circle.large {
+  width: 150px;
+  height: 150px;
+  margin-top: 10px;
+}
+
+.track-progress-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.track-card {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.track-card h3 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.progress-circle.small {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 10px auto;
+}
+
+.track-card p {
+  font-size: 14px;
+  color: #333;
+}

@@ -1,20 +1,21 @@
+// src/AuthPage.js
 import './theme.css';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from './firebase';
 import {
-  getAuth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 const roleOTPs = {
-  owner: '1234',
-  manager: '5678',
-  marshal: '1111',
-  mechanic: '2222',
-  hr: '3333',
+  owner: '1111',
+  manager: '2222',
+  'assistant manager': '3333',
+  marshall: '4444',
+  'workshop manager': '5555',
+
 };
 
 const inputStyle = {
@@ -68,14 +69,14 @@ const AuthPage = () => {
           isAdmin,
         });
 
-        navigate(isAdmin ? '/track-dashboard' : '/employee-dashboard');
+        navigate('/dashboard');
       } else {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         const userData = userDoc.data();
 
-        navigate(userData?.isAdmin || userData?.role === 'owner' ? '/track-dashboard' : '/employee-dashboard');
+        navigate('/dashboard');
       }
     } catch (err) {
       setError(err.message);
@@ -83,25 +84,8 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="page" style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(to bottom right, #0f0f0f, #1a1a1a)',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 20
-    }}>
-      <div style={{
-        background: 'rgba(255,255,255,0.04)',
-        backdropFilter: 'blur(14px)',
-        border: '1px solid rgba(255,255,255,0.1)',
-        borderRadius: 20,
-        padding: 30,
-        width: '100%',
-        maxWidth: 420,
-        color: '#fff',
-        boxShadow: '0 0 20px rgba(0,0,0,0.3)'
-      }}>
+    <div className="auth-page-wrapper">
+      <div className="auth-card">
         <h2 style={{ textAlign: 'center', marginBottom: 20 }}>
           {isRegister ? 'Register' : 'Login'}
         </h2>
@@ -118,16 +102,20 @@ const AuthPage = () => {
                 style={inputStyle}
               />
               <select
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                style={inputStyle}
-              >
-                <option value="owner">Owner</option>
-                <option value="manager">Manager</option>
-                <option value="marshal">Marshal</option>
-                <option value="mechanic">Mechanic</option>
-                <option value="hr">HR</option>
-              </select>
+  value={role}
+  onChange={(e) => setRole(e.target.value)}
+  style={inputStyle}
+>
+  <option value="owner">Owner</option>
+  <option value="manager">Manager</option>
+  <option value="assistant manager">Assistant Manager</option>
+  <option value="workshop manager">Workshop Manager</option>
+  <option value="marshal">Marshal</option>
+  <option value="mechanic">Mechanic</option>
+ 
+  
+</select>
+
               <input
                 type="text"
                 placeholder="OTP"

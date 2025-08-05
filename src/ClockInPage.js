@@ -1,6 +1,5 @@
-import './theme.css';
 // ClockInPage.js
-
+import './theme.css';
 import React, { useEffect, useState } from 'react';
 import { getAuth } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
@@ -10,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 const CLOCK_RADIUS_METERS = 200;
 
 const trackCoordinates = {
-  epicKartingPavilion: {
+  "epic karting syringa": {
     latitude: -26.017348,
     longitude: 27.836445,
   },
@@ -149,37 +148,101 @@ const ClockInPage = () => {
     setLastClockLogId(null);
   };
 
-return (
-  <div className="clock-page">
-    <div className="glass-card clock-container">
-      <h2 className="clock-title">🕒 Clock In/Out</h2>
+  return (
+  <div style={{
+    minHeight: '100vh',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    background: 'linear-gradient(to bottom right, #000000, #1a1a1a)',
+    color: 'white',
+    fontFamily: 'Helvetica, sans-serif',
+    padding: '20px'
+  }}>
+    <div style={{
+      background: 'rgba(255, 255, 255, 0.05)',
+      borderRadius: '20px',
+      padding: '30px',
+      backdropFilter: 'blur(10px)',
+      boxShadow: '0 0 10px rgba(255, 255, 255, 0.1)',
+      width: '100%',
+      maxWidth: '400px',
+      textAlign: 'center'
+    }}>
+      <h2 style={{
+        fontSize: '24px',
+        marginBottom: '25px',
+        fontWeight: '600',
+        letterSpacing: '0.5px'
+      }}>
+        🕒 Clock In / Out
+      </h2>
+
       {loading ? (
-        <p className="clock-status">Getting location...</p>
+        <p>Getting location...</p>
       ) : (
-        <>
-          <p className="clock-status">{status}</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <p>{status}</p>
+
           {distance !== null && (
-            <p className="clock-distance">
+            <p style={{ fontSize: '14px', color: '#ccc' }}>
               Distance: {distance.toFixed(1)}m (max {CLOCK_RADIUS_METERS}m)
             </p>
           )}
+
           {isClockedIn ? (
-            <button className="clock-btn clock-out" onClick={handleClockOut}>
+            <button
+              onClick={handleClockOut}
+              style={{
+                padding: '12px 20px',
+                backgroundColor: '#d50000',
+                color: 'white',
+                fontWeight: 'bold',
+                border: 'none',
+                borderRadius: '10px',
+                width: '100%',
+                cursor: 'pointer'
+              }}
+            >
               Clock Out
             </button>
           ) : (
             canClockIn && (
-              <button className="clock-btn clock-in" onClick={handleClockIn}>
+              <button
+                onClick={handleClockIn}
+                style={{
+                  padding: '12px 20px',
+                  backgroundColor: '#00c853',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  border: 'none',
+                  borderRadius: '10px',
+                  width: '100%',
+                  cursor: 'pointer'
+                }}
+              >
                 Clock In
               </button>
             )
           )}
-        </>
+
+          {isClockedIn && (
+            <div style={{
+              padding: '10px',
+              backgroundColor: '#1e1e1e',
+              borderRadius: '10px',
+              border: '1px solid #00c853',
+              color: '#00c853',
+              fontWeight: 'bold'
+            }}>
+              ✅ You are Clocked In
+            </div>
+          )}
+        </div>
       )}
     </div>
   </div>
-);
-
+  );
 };
 
 export default ClockInPage;
