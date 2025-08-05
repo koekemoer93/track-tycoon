@@ -1,3 +1,4 @@
+import './theme.css';
 // src/firebase.js
 
 import { initializeApp } from "firebase/app";

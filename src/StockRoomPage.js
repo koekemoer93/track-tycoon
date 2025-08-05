@@ -1,3 +1,4 @@
+import './theme.css';
 // src/StockRoomPage.js
 import React, { useEffect, useState } from 'react';
 import { db } from './firebase';

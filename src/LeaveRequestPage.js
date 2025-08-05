@@ -1,3 +1,4 @@
+import './theme.css';
 // src/LeaveRequestPage.js
 import React, { useEffect, useState } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
@@ -122,8 +123,13 @@ const LeaveRequestPage = () => {
 
   if (!userInfo) {
     return (
+  <div className="page">
+    <div className="glass-card">
       <p style={{ color: '#fff', padding: 20 }}>Loading user information…</p>
-    );
+    
+    </div>
+  </div>
+);
   }
 
   return (

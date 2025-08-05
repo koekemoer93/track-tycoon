@@ -1,3 +1,4 @@
+import '../theme.css';
 // src/components/AnalyticsCards.js
 import React from 'react';
 
@@ -23,6 +24,8 @@ const AnalyticsCards = ({ totalTasks, completedTasks, leastCompletedTrack, mostA
   const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   return (
+  <div className="page">
+    <div className="glass-card">
     <div style={containerStyle}>
       <div style={cardStyle}>
         <h3>Total Tasks Today</h3>
@@ -41,7 +44,10 @@ const AnalyticsCards = ({ totalTasks, completedTasks, leastCompletedTrack, mostA
         <p style={{ fontSize: '20px' }}>{mostActiveRole || '—'}</p>
       </div>
     </div>
-  );
+  
+    </div>
+  </div>
+);
 };
 
 export default AnalyticsCards;

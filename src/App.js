@@ -1,3 +1,4 @@
+import './theme.css';
 // src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
@@ -21,6 +22,8 @@ import LeaveTrackerPage from './LeaveTrackerPage';
 
 function App() {
   return (
+  <div className="page">
+    <div className="glass-card">
       <Router>
         <TopNav />
         <Routes>
@@ -112,7 +115,10 @@ function App() {
           </a>
         </footer>
       </Router>
-  );
+  
+    </div>
+  </div>
+);
 }
 
 export default App;

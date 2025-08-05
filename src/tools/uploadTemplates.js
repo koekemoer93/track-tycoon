@@ -1,3 +1,4 @@
+import '../theme.css';
 // src/tools/uploadTemplates.js
 import { db } from '../firebase';
 import { doc, setDoc } from 'firebase/firestore';

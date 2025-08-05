@@ -1,3 +1,4 @@
+import './theme.css';
 // src/TrackDashboard.js
 import AnalyticsCards from './components/AnalyticsCards';
 import React, { useEffect, useState } from 'react';
@@ -107,7 +108,12 @@ const TrackDashboard = () => {
       setTracks(data);
     });
 
-    return () => unsubscribe();
+    return (
+  <div className="page">
+    <div className="glass-card">) => unsubscribe(
+    </div>
+  </div>
+);
   }, []);
 
   useEffect(() => {

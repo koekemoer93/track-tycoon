@@ -1,3 +1,4 @@
+import './theme.css';
 // src/mockTemplatesByDay.js
 const mockTemplatesByDay = {
   Mechanic: {

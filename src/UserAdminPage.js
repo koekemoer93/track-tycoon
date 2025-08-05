@@ -1,3 +1,4 @@
+import './theme.css';
 import React, { useEffect, useState } from 'react';
 import { db } from './firebase';
 import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
@@ -18,7 +19,12 @@ const UserAdminPage = () => {
       setCurrentUserRole(role);
     });
 
-    return () => unsubscribe();
+    return (
+  <div className="page">
+    <div className="glass-card">) => unsubscribe(
+    </div>
+  </div>
+);
   }, []);
 
   useEffect(() => {

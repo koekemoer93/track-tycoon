@@ -1,3 +1,4 @@
+import './theme.css';
 // src/StockImportPage.js
 import React, { useState } from 'react';
 import Papa from 'papaparse';
@@ -63,6 +64,8 @@ const StockImportPage = () => {
   };
 
   return (
+  <div className="page">
+    <div className="glass-card">
     <div style={{ padding: 20, color: '#fff' }}>
       <h2>Import Stock CSV</h2>
       <input type="file" accept=".csv" onChange={handleFileUpload} />
@@ -75,7 +78,10 @@ const StockImportPage = () => {
         </>
       )}
     </div>
-  );
+  
+    </div>
+  </div>
+);
 };
 
 export default StockImportPage;

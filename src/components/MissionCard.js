@@ -1,3 +1,4 @@
+import '../theme.css';
 // src/components/MissionCard.js
 import React from 'react';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
@@ -5,6 +6,8 @@ import 'react-circular-progressbar/dist/styles.css';
 
 const MissionCard = ({ userName, progress, taskCount }) => {
   return (
+  <div className="page">
+    <div className="glass-card">
     <div style={{
       background: 'rgba(255,255,255,0.05)',
       borderRadius: 16,
@@ -33,7 +36,10 @@ const MissionCard = ({ userName, progress, taskCount }) => {
         />
       </div>
     </div>
-  );
+  
+    </div>
+  </div>
+);
 };
 
 export default MissionCard;

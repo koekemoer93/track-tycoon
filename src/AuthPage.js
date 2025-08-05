@@ -1,7 +1,12 @@
+import './theme.css';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from './firebase';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword
+} from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 const roleOTPs = {
@@ -10,6 +15,24 @@ const roleOTPs = {
   marshal: '1111',
   mechanic: '2222',
   hr: '3333',
+};
+
+const inputStyle = {
+  width: '100%',
+  padding: '10px',
+  marginBottom: '10px',
+  borderRadius: '8px',
+  border: '1px solid #444',
+  backgroundColor: '#2a2a2a',
+  color: '#fff'
+};
+
+const buttonStyle = {
+  ...inputStyle,
+  backgroundColor: '#30d158',
+  color: '#000',
+  fontWeight: 'bold',
+  cursor: 'pointer'
 };
 
 const AuthPage = () => {
@@ -60,7 +83,7 @@ const AuthPage = () => {
   };
 
   return (
-    <div style={{
+    <div className="page" style={{
       minHeight: '100vh',
       background: 'linear-gradient(to bottom right, #0f0f0f, #1a1a1a)',
       display: 'flex',
@@ -69,13 +92,13 @@ const AuthPage = () => {
       padding: 20
     }}>
       <div style={{
-        background: 'rgba(255,255,255,0.05)',
-        backdropFilter: 'blur(12px)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        background: 'rgba(255,255,255,0.04)',
+        backdropFilter: 'blur(14px)',
+        border: '1px solid rgba(255,255,255,0.1)',
         borderRadius: 20,
         padding: 30,
         width: '100%',
-        maxWidth: 360,
+        maxWidth: 420,
         color: '#fff',
         boxShadow: '0 0 20px rgba(0,0,0,0.3)'
       }}>
@@ -86,20 +109,52 @@ const AuthPage = () => {
         <form onSubmit={handleSubmit}>
           {isRegister && (
             <>
-              <input type="text" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required style={inputStyle} />
-              <select value={role} onChange={(e) => setRole(e.target.value)} style={inputStyle}>
+              <input
+                type="text"
+                placeholder="Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                style={inputStyle}
+              />
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                style={inputStyle}
+              >
                 <option value="owner">Owner</option>
                 <option value="manager">Manager</option>
                 <option value="marshal">Marshal</option>
                 <option value="mechanic">Mechanic</option>
                 <option value="hr">HR</option>
               </select>
-              <input type="text" placeholder="OTP" value={otp} onChange={(e) => setOtp(e.target.value)} required style={inputStyle} />
+              <input
+                type="text"
+                placeholder="OTP"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                required
+                style={inputStyle}
+              />
             </>
           )}
 
-          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required style={inputStyle} />
-          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required style={inputStyle} />
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            style={inputStyle}
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            style={inputStyle}
+          />
 
           <button type="submit" style={buttonStyle}>
             {isRegister ? 'Register' : 'Login'}
@@ -107,9 +162,16 @@ const AuthPage = () => {
 
           {error && <p style={{ color: 'red', marginTop: 10 }}>{error}</p>}
 
-          <p style={{ marginTop: 15, textAlign: 'center' }}>
+          <p style={{ marginTop: 15, textAlign: 'center', fontSize: '0.95rem' }}>
             {isRegister ? 'Already have an account?' : 'Don’t have an account?'}{' '}
-            <span style={{ textDecoration: 'underline', cursor: 'pointer' }} onClick={() => setIsRegister(!isRegister)}>
+            <span
+              style={{
+                textDecoration: 'underline',
+                cursor: 'pointer',
+                color: '#30d158',
+              }}
+              onClick={() => setIsRegister(!isRegister)}
+            >
               {isRegister ? 'Login' : 'Register'}
             </span>
           </p>
@@ -117,24 +179,6 @@ const AuthPage = () => {
       </div>
     </div>
   );
-};
-
-const inputStyle = {
-  width: '100%',
-  padding: '10px',
-  marginBottom: '10px',
-  borderRadius: '8px',
-  border: '1px solid #444',
-  backgroundColor: '#2a2a2a',
-  color: '#fff'
-};
-
-const buttonStyle = {
-  ...inputStyle,
-  backgroundColor: '#30d158',
-  color: '#000',
-  fontWeight: 'bold',
-  cursor: 'pointer'
 };
 
 export default AuthPage;

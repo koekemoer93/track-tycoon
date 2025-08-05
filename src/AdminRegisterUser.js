@@ -1,3 +1,4 @@
+import './theme.css';
 // src/AdminRegisterUser.js
 import React, { useState } from 'react';
 import { createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
@@ -74,6 +75,8 @@ const AdminRegisterUser = () => {
   };
 
   return (
+  <div className="page">
+    <div className="glass-card">
     <div style={{
       minHeight: '100vh',
       background: 'linear-gradient(to bottom right, #0f0f0f, #1a1a1a)',
@@ -159,7 +162,10 @@ const AdminRegisterUser = () => {
         <p style={{ marginTop: 20 }}>{status}</p>
       </div>
     </div>
-  );
+  
+    </div>
+  </div>
+);
 };
 
 const inputStyle = {

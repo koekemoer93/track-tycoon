@@ -1,3 +1,4 @@
+import '../theme.css';
 // src/components/AddEmployeeForm.js
 import React, { useState } from 'react';
 import { createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
@@ -65,6 +66,8 @@ const AddEmployeeForm = () => {
   };
 
   return (
+  <div className="page">
+    <div className="glass-card">
     <div
       style={{
         background: 'rgba(255, 255, 255, 0.05)',
@@ -100,7 +103,10 @@ const AddEmployeeForm = () => {
       </form>
       <p style={{ marginTop: 20 }}>{status}</p>
     </div>
-  );
+  
+    </div>
+  </div>
+);
 };
 
 const inputStyle = {

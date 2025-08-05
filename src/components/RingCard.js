@@ -1,3 +1,4 @@
+import '../theme.css';
 // src/components/RingCard.js
 import React from 'react';
 import { CircularProgressbarWithChildren, buildStyles } from 'react-circular-progressbar';
@@ -7,6 +8,8 @@ const RingCard = ({ label, value, target, color, unit }) => {
   const percentage = target > 0 ? Math.min((value / target) * 100, 100) : 0;
 
   return (
+  <div className="page">
+    <div className="glass-card">
     <div style={cardStyle}>
       <div style={{ width: 80, height: 80 }}>
         <CircularProgressbarWithChildren
@@ -25,7 +28,10 @@ const RingCard = ({ label, value, target, color, unit }) => {
       </div>
       <p style={{ marginTop: 10, color: '#aaa', fontSize: 12 }}>{label}</p>
     </div>
-  );
+  
+    </div>
+  </div>
+);
 };
 
 const cardStyle = {

@@ -1,8 +1,9 @@
+import './theme.css';
 // ClockInPage.js
 
 import React, { useEffect, useState } from 'react';
 import { getAuth } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
 import { useNavigate } from 'react-router-dom';
 
@@ -36,6 +37,8 @@ const ClockInPage = () => {
   const [distance, setDistance] = useState(null);
   const [canClockIn, setCanClockIn] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isClockedIn, setIsClockedIn] = useState(false);
+  const [lastClockLogId, setLastClockLogId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,14 +62,17 @@ const ClockInPage = () => {
         return;
       }
 
+      if (data.clockedIn && data.lastClockLogId) {
+        setIsClockedIn(true);
+        setLastClockLogId(data.lastClockLogId);
+      }
+
       const watchId = navigator.geolocation.watchPosition(
         (position) => {
           const userCoords = {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
           };
-
-          console.log('Current Position:', userCoords);
 
           const dist = haversineDistance(userCoords, trackCoord);
           setDistance(dist);
@@ -104,42 +110,76 @@ const ClockInPage = () => {
     if (!user) return;
 
     const now = new Date();
-    const clockRef = doc(db, 'users', user.uid, 'clockLogs', now.toISOString());
+    const logId = now.toISOString();
+    const clockRef = doc(db, 'users', user.uid, 'clockLogs', logId);
     await setDoc(clockRef, {
-      type: 'clock-in',
-      timestamp: now,
+      clockIn: now,
     });
+
+    const userRef = doc(db, 'users', user.uid);
+    await updateDoc(userRef, {
+      clockedIn: true,
+      lastClockLogId: logId,
+    });
+
     setStatus('Clocked in successfully!');
+    setIsClockedIn(true);
+    setLastClockLogId(logId);
   };
 
-  return (
-    <div style={{ padding: '20px', color: 'white' }}>
-      <h2>🕒 Clock In/Out</h2>
+  const handleClockOut = async () => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user || !lastClockLogId) return;
+
+    const now = new Date();
+    const clockRef = doc(db, 'users', user.uid, 'clockLogs', lastClockLogId);
+    await updateDoc(clockRef, {
+      clockOut: now,
+    });
+
+    const userRef = doc(db, 'users', user.uid);
+    await updateDoc(userRef, {
+      clockedIn: false,
+      lastClockLogId: '',
+    });
+
+    setStatus('Clocked out successfully!');
+    setIsClockedIn(false);
+    setLastClockLogId(null);
+  };
+
+return (
+  <div className="clock-page">
+    <div className="glass-card clock-container">
+      <h2 className="clock-title">🕒 Clock In/Out</h2>
       {loading ? (
-        <p>Getting location...</p>
+        <p className="clock-status">Getting location...</p>
       ) : (
         <>
-          <p>{status}</p>
-          {distance !== null && <p>Distance: {distance.toFixed(1)}m (max {CLOCK_RADIUS_METERS}m)</p>}
-          {canClockIn && (
-            <button
-              onClick={handleClockIn}
-              style={{
-                marginTop: '10px',
-                padding: '10px 20px',
-                backgroundColor: 'red',
-                color: 'white',
-                borderRadius: '10px',
-                border: 'none',
-              }}
-            >
-              Clock In
+          <p className="clock-status">{status}</p>
+          {distance !== null && (
+            <p className="clock-distance">
+              Distance: {distance.toFixed(1)}m (max {CLOCK_RADIUS_METERS}m)
+            </p>
+          )}
+          {isClockedIn ? (
+            <button className="clock-btn clock-out" onClick={handleClockOut}>
+              Clock Out
             </button>
+          ) : (
+            canClockIn && (
+              <button className="clock-btn clock-in" onClick={handleClockIn}>
+                Clock In
+              </button>
+            )
           )}
         </>
       )}
     </div>
-  );
+  </div>
+);
+
 };
 
 export default ClockInPage;

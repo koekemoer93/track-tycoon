@@ -1,3 +1,4 @@
+import './theme.css';
 // src/LeaveTrackerPage.js
 import React, { useEffect, useState } from 'react';
 import {
@@ -50,6 +51,8 @@ const LeaveTrackerPage = () => {
   };
 
   return (
+  <div className="page">
+    <div className="glass-card">
     <div
       style={{
         minHeight: '100vh',
@@ -208,7 +211,10 @@ const LeaveTrackerPage = () => {
         )}
       </div>
     </div>
-  );
+  
+    </div>
+  </div>
+);
 };
 
 export default LeaveTrackerPage;

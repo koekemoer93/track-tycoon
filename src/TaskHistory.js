@@ -1,3 +1,4 @@
+import './theme.css';
 // ----------- TASKHISTORY.JS -----------
 // src/TaskHistory.js
 import React, { useEffect, useState } from 'react';
@@ -38,6 +39,8 @@ const TaskHistory = () => {
   const sortedDates = Object.keys(history).sort((a, b) => new Date(b) - new Date(a)).slice(0, 7);
 
   return (
+  <div className="page">
+    <div className="glass-card">
     <div style={{
       minHeight: '100vh', background: 'linear-gradient(to bottom right, #0f0f0f, #1a1a1a)',
       display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: 20
@@ -67,7 +70,10 @@ const TaskHistory = () => {
         )}
       </div>
     </div>
-  );
+  
+    </div>
+  </div>
+);
 };
 
 export default TaskHistory;

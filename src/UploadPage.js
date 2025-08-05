@@ -1,3 +1,4 @@
+import './theme.css';
 // src/UploadPage.js
 import React from 'react';
 import { uploadTemplatesToFirestore } from './tools/uploadTemplates';
@@ -9,11 +10,16 @@ const UploadPage = () => {
   };
 
   return (
+  <div className="page">
+    <div className="glass-card">
     <div style={{ padding: 40, color: '#fff' }}>
       <h2>🔥 Upload Templates to Firestore</h2>
       <button onClick={handleUpload}>Upload Now</button>
     </div>
-  );
+  
+    </div>
+  </div>
+);
 };
 
 export default UploadPage;

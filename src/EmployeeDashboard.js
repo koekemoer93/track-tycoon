@@ -1,3 +1,4 @@
+import './theme.css';
 // Updated EmployeeDashboard.js with embedded My Schedule view and all existing features plus Clock In/Out button
 
 import React, { useEffect, useState } from 'react';
@@ -175,6 +176,8 @@ const EmployeeDashboard = () => {
   }, [userInfo]);
 
   return (
+  <div className="page">
+    <div className="glass-card">
     <div style={{ padding: '20px', color: 'white' }}>
       <h1>Welcome, {userInfo?.name || 'Employee'}</h1>
 
@@ -259,7 +262,10 @@ const EmployeeDashboard = () => {
         ))}
       </div>
     </div>
-  );
+  
+    </div>
+  </div>
+);
 };
 
 export default EmployeeDashboard;

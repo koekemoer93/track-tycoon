@@ -1,3 +1,4 @@
+import './theme.css';
 // ----------- TRACKPAGE.JS -----------
 // src/TrackPage.js
 import React, { useEffect, useState } from 'react';
@@ -50,6 +51,8 @@ const TrackPage = () => {
   if (!track) return <p style={{ color: '#fff', padding: 20 }}>Loading track...</p>;
 
   return (
+  <div className="page">
+    <div className="glass-card">
     <div style={{
       minHeight: '100vh', background: 'linear-gradient(to bottom right, #0f0f0f, #1a1a1a)',
       display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: 20
@@ -83,7 +86,10 @@ const TrackPage = () => {
         )}
       </div>
     </div>
-  );
+  
+    </div>
+  </div>
+);
 };
 
 export default TrackPage;
