@@ -1,4 +1,4 @@
-// Updated EmployeeDashboard.js with embedded My Schedule view and all existing features
+// Updated EmployeeDashboard.js with embedded My Schedule view and all existing features plus Clock In/Out button
 
 import React, { useEffect, useState } from 'react';
 import { getAuth } from 'firebase/auth';
@@ -10,7 +10,7 @@ import {
   getDocs,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
@@ -174,7 +174,7 @@ const EmployeeDashboard = () => {
     fetchWeeklySchedule();
   }, [userInfo]);
 
-    return (
+  return (
     <div style={{ padding: '20px', color: 'white' }}>
       <h1>Welcome, {userInfo?.name || 'Employee'}</h1>
 
@@ -189,6 +189,22 @@ const EmployeeDashboard = () => {
             ))}
           </ul>
         )}
+
+        <Link
+          to="/clock-in"
+          style={{
+            marginTop: '10px',
+            display: 'inline-block',
+            padding: '10px 20px',
+            backgroundColor: '#4fc3f7',
+            borderRadius: '8px',
+            color: 'black',
+            fontWeight: 'bold',
+            textDecoration: 'none',
+          }}
+        >
+          🕒 Clock In / Out
+        </Link>
       </div>
 
       <div style={{ marginTop: '40px' }}>
@@ -209,6 +225,23 @@ const EmployeeDashboard = () => {
         <p>XP: {xp}</p>
         <p>Title: {getBadgeTitle(getLevel(xp))}</p>
       </div>
+            <div style={{ marginTop: '40px' }}>
+  <h2>Attendance</h2>
+  <button
+    onClick={() => navigate('/clock-in')}
+    style={{
+      background: '#4fc3f7',
+      color: '#000',
+      padding: '10px 20px',
+      border: 'none',
+      borderRadius: '8px',
+      fontWeight: 'bold',
+      cursor: 'pointer',
+    }}
+  >
+    Go to Clock In/Out
+  </button>
+</div>
 
       <div style={{ marginTop: '40px' }}>
         <h2>My Schedule</h2>
@@ -227,7 +260,6 @@ const EmployeeDashboard = () => {
       </div>
     </div>
   );
-
 };
 
 export default EmployeeDashboard;
