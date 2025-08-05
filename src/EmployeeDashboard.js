@@ -63,7 +63,7 @@ const EmployeeDashboard = () => {
       const data = snap.exists() ? snap.data() : null;
       setUserInfo(data);
 
-      const progressRef = doc(db, 'users', user.uid, 'progressSummary');
+      const progressRef = doc(db, 'users', user.uid, 'progressSummary', 'summary');
       const progressSnap = await getDoc(progressRef);
       if (progressSnap.exists()) {
         const progressData = progressSnap.data();
@@ -174,7 +174,60 @@ const EmployeeDashboard = () => {
     fetchWeeklySchedule();
   }, [userInfo]);
 
-  // ... rest of component unchanged (existing task view, image uploads, XP, streak, and dashboard layout)
+    return (
+    <div style={{ padding: '20px', color: 'white' }}>
+      <h1>Welcome, {userInfo?.name || 'Employee'}</h1>
+
+      <div style={{ marginTop: '20px' }}>
+        <h2>Today's Tasks</h2>
+        {checklist.length === 0 ? (
+          <p>No tasks for today</p>
+        ) : (
+          <ul>
+            {checklist.map((task, index) => (
+              <li key={index}>{task.title || task}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div style={{ marginTop: '40px' }}>
+        <h2>XP & Streak</h2>
+        <div style={{ width: 120, height: 120 }}>
+          <CircularProgressbar
+            value={getXPForNextLevel(xp).xpInLevel}
+            maxValue={100}
+            text={`Lvl ${getLevel(xp)}`}
+            styles={buildStyles({
+              textColor: 'white',
+              pathColor: '#4fc3f7',
+              trailColor: '#1a1a1a',
+            })}
+          />
+        </div>
+        <p>Streak: {streak} days</p>
+        <p>XP: {xp}</p>
+        <p>Title: {getBadgeTitle(getLevel(xp))}</p>
+      </div>
+
+      <div style={{ marginTop: '40px' }}>
+        <h2>My Schedule</h2>
+        {weeklySchedule.map((day, index) => (
+          <div key={index}>
+            <strong>{day.date}</strong>
+            <ul>
+              {day.tasks.length === 0 ? (
+                <li>No tasks</li>
+              ) : (
+                day.tasks.map((task, idx) => <li key={idx}>{task.title || task}</li>)
+              )}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
 };
 
 export default EmployeeDashboard;

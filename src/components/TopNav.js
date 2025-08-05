@@ -50,9 +50,10 @@ const TopNav = () => {
           setPendingCount(snapshot.size);
         });
       } else {
-        // Non-admins get employee dashboard and leave request page
+        // Non-admins get employee dashboard, clock page and leave request page
         setTabs([
           { path: '/employee-dashboard', label: '🧑‍🔧 Employee' },
+          { path: '/clock-in', label: '🕒 Clock' },
           { path: '/leave', label: '⛱️ Leave' },
         ]);
       }

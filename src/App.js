@@ -14,6 +14,7 @@ import UploadPage from './UploadPage';
 import AdminRegisterUser from './AdminRegisterUser';
 import ProtectedRoute from './components/ProtectedRoute';
 import TaskHistory from './TaskHistory';
+import ClockInPage from './ClockInPage';
 // Import leave system pages
 import LeaveRequestPage from './LeaveRequestPage';
 import LeaveTrackerPage from './LeaveTrackerPage';
@@ -68,6 +69,17 @@ function App() {
           element={
             <ProtectedRoute>
               <LeaveRequestPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Route for the new clock‑in/clock‑out page. Only authenticated
+            users should be able to access this page. */}
+        <Route
+          path="/clock-in"
+          element={
+            <ProtectedRoute>
+              <ClockInPage />
             </ProtectedRoute>
           }
         />
